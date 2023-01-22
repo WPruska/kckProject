@@ -36,15 +36,15 @@ scene.add( directionalLight );
 
 
 var group = new THREE.Group();
-group.attach(cubes[0][1][0]);//  warstwa
-group.attach(cubes[0][1][1]); 
+group.attach(cubes[0][0][0]);//  warstwa
+group.attach(cubes[0][0][1]); 
+group.attach(cubes[0][0][2]);
+group.attach(cubes[0][1][1]);
+group.attach(cubes[0][1][0]);
 group.attach(cubes[0][1][2]);
-group.attach(cubes[1][1][1]);
-group.attach(cubes[1][1][0]);
-group.attach(cubes[1][1][2]);
-group.attach(cubes[2][1][0]);
-group.attach(cubes[2][1][1]);
-group.attach(cubes[2][1][2]);
+group.attach(cubes[0][2][0]);
+group.attach(cubes[0][2][1]);
+group.attach(cubes[0][2][2]);
 group.position.set(0,0,0);
 scene.add(group);
 
@@ -64,13 +64,21 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-
 renderer.render(scene, camera);
+let count = 0;
+
 function animate() {
-    group.rotation.y += Math.PI/16;
-    renderer.render(scene, camera);
+    setTimeout(()=>{
+        group.rotation.x += Math.PI/16;
+        renderer.render(scene, camera);
+        count++;
+        if (count<8) {
+            window.requestAnimationFrame(animate);
+        }
+    },100);
 }
 
 window.addEventListener("click", ()=>{
-    animate();
+    count = 0
+    window.requestAnimationFrame(animate);
 });
