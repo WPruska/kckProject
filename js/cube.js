@@ -44,18 +44,9 @@ directionalLight.position.set(10,20,0);
 scene.add( directionalLight );
 
 
-var group = new THREE.Group();
-group.attach(cubes[0][0][0]);
-group.attach(cubes[0][0][1]); 
-group.attach(cubes[0][0][2]);
-group.attach(cubes[0][1][1]);
-group.attach(cubes[0][1][0]);
-group.attach(cubes[0][1][2]);
-group.attach(cubes[0][2][0]);
-group.attach(cubes[0][2][1]);
-group.attach(cubes[0][2][2]);
-group.position.set(0,0,0);
-scene.add(group);
+var group1 = addWallToGroup("side",1);
+group1.position.set(0,0,0);
+scene.add(group1);
 
 const camera = new THREE.OrthographicCamera(
     width/-2,
@@ -76,18 +67,66 @@ document.body.appendChild(renderer.domElement);
 renderer.render(scene, camera);
 let count = 0;
 
-function animate() {
+function xRotate() {
     setTimeout(()=>{
-        group.rotation.x += Math.PI/16;
+        group1.rotation.x += Math.PI/16;
         renderer.render(scene, camera);
         count++;
         if (count<8) {
-            window.requestAnimationFrame(animate);
+            window.requestAnimationFrame(xRotate);
+        }
+    },100);
+}
+
+function yRotate() {
+    setTimeout(()=>{
+        group1.rotation.y += Math.PI/16;
+        renderer.render(scene, camera);
+        count++;
+        if (count<8) {
+            window.requestAnimationFrame(yRotate);
         }
     },100);
 }
 
 window.addEventListener("click", ()=>{
     count = 0
-    window.requestAnimationFrame(animate);
+    window.requestAnimationFrame(xRotate);
 });
+
+window.addEventListener("keypress", ()=>{
+    count = 0
+    window.requestAnimationFrame(yRotate);
+});
+
+function addWallToGroup(type, layer){
+    var group = new THREE.Group();
+    switch(type){
+        case "top":
+            for(let i=0; i<=2 ; i++){
+                for(let j=0; j<=2 ; j++){
+                    console.log("cube: "+i+" "+layer+" "+j);
+                    group.attach(cubes[i][layer][j]);
+                }
+            }
+        break;
+        case "front":
+            for(let i=0; i<=2 ; i++){
+                for(let j=0; j<=2 ; j++){
+                    console.log("cube: "+i+" "+j+" "+layer);
+                    group.attach(cubes[i][j][layer]);
+                }
+            }
+        break;
+        case "side":
+            for(let i=0; i<=2 ; i++){
+                for(let j=0; j<=2 ; j++){
+                    console.log("cube: "+layer+" "+i+" "+j);
+                    group.attach(cubes[layer][i][j]);
+                }
+            }
+            break;
+    }
+    return group;
+}
+
