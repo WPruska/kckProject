@@ -3,8 +3,17 @@ const height = width *(window.innerHeight/window.innerWidth);
 
 const scene = new THREE.Scene();
 
+let loader = new THREE.TextureLoader();
+
 const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+let materialArray = [
+    new THREE.MeshStandardMaterial( { map: loader.load("img/red.png") } ),
+    new THREE.MeshStandardMaterial( { map: loader.load("img/green.png") } ),
+    new THREE.MeshStandardMaterial( { map: loader.load("img/yellow.png") } ),
+    new THREE.MeshStandardMaterial( { map: loader.load("img/blue.png") } ),
+    new THREE.MeshStandardMaterial( { map: loader.load("img/white.png") } ),
+    new THREE.MeshStandardMaterial( { map: loader.load("img/orange.png") } ),
+];
 
 let cubes = new Array();
 
@@ -18,7 +27,7 @@ for(let i = 0; i<= 2; i++){
 for(let i = -1; i<= 1; i++){
     for(let j = -1; j<= 1; j++){
         for(let k = -1; k<= 1; k++){
-            const cube = new THREE.Mesh(geometry, material);
+            const cube = new THREE.Mesh(geometry, materialArray);
             cube.position.set(i,j,k);
             scene.add(cube);
             cubes[i+1][j+1][k+1] = cube;
@@ -36,7 +45,7 @@ scene.add( directionalLight );
 
 
 var group = new THREE.Group();
-group.attach(cubes[0][0][0]);//  warstwa
+group.attach(cubes[0][0][0]);
 group.attach(cubes[0][0][1]); 
 group.attach(cubes[0][0][2]);
 group.attach(cubes[0][1][1]);
