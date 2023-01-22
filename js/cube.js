@@ -1,0 +1,76 @@
+const width = 10;
+const height = width *(window.innerHeight/window.innerWidth);
+
+const scene = new THREE.Scene();
+
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+
+let cubes = new Array();
+
+for(let i = 0; i<= 2; i++){
+    cubes[i] = new Array();
+    for(let j = 0; j<= 2; j++){
+        cubes[i][j] = new Array();
+    }
+}
+
+for(let i = -1; i<= 1; i++){
+    for(let j = -1; j<= 1; j++){
+        for(let k = -1; k<= 1; k++){
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(i,j,k);
+            scene.add(cube);
+            cubes[i+1][j+1][k+1] = cube;
+        }
+    }
+}
+
+const light = new THREE.AmbientLight( 0xffffff, 0.6); 
+light.position.set(10,20,0);
+scene.add( light );
+
+const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+directionalLight.position.set(10,20,0);
+scene.add( directionalLight );
+
+
+var group = new THREE.Group();
+group.attach(cubes[0][1][0]);//  warstwa
+group.attach(cubes[0][1][1]); 
+group.attach(cubes[0][1][2]);
+group.attach(cubes[1][1][1]);
+group.attach(cubes[1][1][0]);
+group.attach(cubes[1][1][2]);
+group.attach(cubes[2][1][0]);
+group.attach(cubes[2][1][1]);
+group.attach(cubes[2][1][2]);
+group.position.set(0,0,0);
+scene.add(group);
+
+const camera = new THREE.OrthographicCamera(
+    width/-2,
+    width/2,
+    height/2,
+    height/-2,
+    1,
+    100
+);
+ 
+camera.position.set(4,4,4);
+camera.lookAt(0,0,0);
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+
+renderer.render(scene, camera);
+function animate() {
+    group.rotation.y += Math.PI/16;
+    renderer.render(scene, camera);
+}
+
+window.addEventListener("click", ()=>{
+    animate();
+});
