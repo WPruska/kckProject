@@ -1,7 +1,7 @@
-const width = 10;
-const height = width * (window.innerHeight / window.innerWidth);
+import * as THREE from "../node_modules/three/build/three.module.js";
 
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x19d7f8);
 
 let loader = new THREE.TextureLoader();
 
@@ -47,13 +47,8 @@ let group1 = addWallToGroup("side", 1);
 group1.position.set(0, 0, 0);
 scene.add(group1);
 
-const camera = new THREE.OrthographicCamera(
-    width / -2,
-    width / 2,
-    height / 2,
-    height / -2,
-    1,
-    100
+const camera = new THREE.PerspectiveCamera(
+    60, window.innerWidth / window.innerHeight, 1, 2000
 );
 
 camera.position.set(4, 4, 4);
@@ -63,8 +58,8 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-var mainSound  = new Audio();
-var mainSoundSrc  = document.createElement("source");
+let mainSound  = new Audio();
+let mainSoundSrc  = document.createElement("source");
 mainSoundSrc.type = "audio/mpeg";
 mainSoundSrc.src  = "audio/audio.mp3";
 mainSound.appendChild(mainSoundSrc);
@@ -78,8 +73,8 @@ function xRotate() {
         renderer.render(scene, camera);
         count++;
         if (count == 4) {
-            var cubeSound  = new Audio();
-            var cubeSoundSrc  = document.createElement("source");
+            let cubeSound  = new Audio();
+            let cubeSoundSrc  = document.createElement("source");
             cubeSoundSrc.type = "audio/mpeg";
             cubeSoundSrc.src  = "audio/kostka.mp3";
             cubeSound.appendChild(cubeSoundSrc);
@@ -101,6 +96,15 @@ function yRotate() {
         }
     }, 30);
 }
+
+window.addEventListener('resize', function(){
+    console.log('dsadsa');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix;
+});
 
 window.addEventListener("click", () => {
     count = 0;
@@ -146,7 +150,18 @@ function addWallToGroup(type, layer) {
 function init(){
     renderer.render(scene, camera);
     mainSound.play();
-    var initButton = document.getElementById("initButton");
+    let initButton = document.getElementById("initButton");
     initButton.classList.add("hidden");
 }
 
+export{init}
+
+
+// const controls = new TrackballControls(camera, renderer.domElement);
+// controls.update();
+// function animate(){
+//     requestAnimationFrame(animate);
+//     renderer.render(scene, camera);
+//     controls.update();
+// }
+// animate();

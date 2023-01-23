@@ -1,0 +1,24 @@
+{
+  "name": "kckproject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WPruska/kckProject.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WPruska/kckProject/issues"
+  },
+  "homepage": "https://github.com/WPruska/kckProject#readme",
+  "dependencies": {
+    "three": "^0.148.0",
+    "three-trackballcontrols": "^0.9.0"
+  }
+}
