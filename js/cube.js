@@ -1,4 +1,6 @@
+import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
+
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x19d7f8);
@@ -48,13 +50,19 @@ group1.position.set(0, 0, 0);
 scene.add(group1);
 
 const camera = new THREE.PerspectiveCamera(
-    60, window.innerWidth / window.innerHeight, 1, 2000
+    80,
+    window.innerWidth / window.innerHeight,
+    1,
+    1000
 );
 
-camera.position.set(4, 4, 4);
-camera.lookAt(0, 0, 0);
+function setStartCameraPosition() {
+    camera.position.set(4, 4, 4);
+    camera.lookAt(0, 0, 0);
+}
 
 const renderer = new THREE.WebGLRenderer();
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -147,20 +155,19 @@ function addWallToGroup(type, layer) {
     return group;
 }
 
-// const controls = new TrackballControls(camera, renderer.domElement);
-// controls.update();
-// function animate() {
-//     requestAnimationFrame(animate);
-//     renderer.render(scene, camera);
-//     controls.update();
-// }
-// animate();
+let controls = new OrbitControls(camera, renderer.domElement);
+controls.update();
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    controls.update();
+}
 
-// function init() {
-//     renderer.render(scene, camera);
-//     mainSound.play();
-//     let initButton = document.getElementById("initButton");
-//     initButton.classList.add("hidden");
-// }
+function init() {
+    renderer.render(scene, camera);
+    mainSound.play();
+}
 
 export { init }
+export { animate }
+export { setStartCameraPosition }

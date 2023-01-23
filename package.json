@@ -18,7 +18,6 @@
   },
   "homepage": "https://github.com/WPruska/kckProject#readme",
   "dependencies": {
-    "three": "^0.148.0",
-    "three-trackballcontrols": "^0.9.0"
+    "three": "^0.148.0"
   }
 }

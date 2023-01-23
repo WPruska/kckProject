@@ -12,3 +12,14 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+#functionalitiesDiv {
+    position: absolute;
+    top: 0%;
+    left: 85%;
+    width: 10rem;
+    height: 10rem;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+    background-color: blueviolet;
+}

@@ -1,7 +1,14 @@
-import { init } from './cube.js';
+import { init, animate, setStartCameraPosition } from './cube.js';
 
-function start()
-{
+function start() {
     init();
+    let initButton = document.getElementById("initButton");
+    initButton.classList.add("hidden");
+    setStartCameraPosition();
+    animate();
 }
-document.querySelector('button').addEventListener('click', start);
+function resetView() {
+    setStartCameraPosition();
+}
+document.getElementById("initButton").addEventListener('click', start);
+document.getElementById("restView").addEventListener('click', resetView);
