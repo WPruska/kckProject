@@ -58,10 +58,10 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-let mainSound  = new Audio();
-let mainSoundSrc  = document.createElement("source");
+let mainSound = new Audio();
+let mainSoundSrc = document.createElement("source");
 mainSoundSrc.type = "audio/mpeg";
-mainSoundSrc.src  = "audio/audio.mp3";
+mainSoundSrc.src = "audio/audio.mp3";
 mainSound.appendChild(mainSoundSrc);
 mainSound.loop = true;
 
@@ -73,10 +73,10 @@ function xRotate() {
         renderer.render(scene, camera);
         count++;
         if (count == 4) {
-            let cubeSound  = new Audio();
-            let cubeSoundSrc  = document.createElement("source");
+            let cubeSound = new Audio();
+            let cubeSoundSrc = document.createElement("source");
             cubeSoundSrc.type = "audio/mpeg";
-            cubeSoundSrc.src  = "audio/kostka.mp3";
+            cubeSoundSrc.src = "audio/kostka.mp3";
             cubeSound.appendChild(cubeSoundSrc);
             cubeSound.play();
         }
@@ -97,7 +97,7 @@ function yRotate() {
     }, 30);
 }
 
-window.addEventListener('resize', function(){
+window.addEventListener('resize', function () {
     console.log('dsadsa');
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -147,21 +147,20 @@ function addWallToGroup(type, layer) {
     return group;
 }
 
-function init(){
-    renderer.render(scene, camera);
-    mainSound.play();
-    let initButton = document.getElementById("initButton");
-    initButton.classList.add("hidden");
-}
-
-export{init}
-
-
 // const controls = new TrackballControls(camera, renderer.domElement);
 // controls.update();
-// function animate(){
+// function animate() {
 //     requestAnimationFrame(animate);
 //     renderer.render(scene, camera);
 //     controls.update();
 // }
 // animate();
+
+// function init() {
+//     renderer.render(scene, camera);
+//     mainSound.play();
+//     let initButton = document.getElementById("initButton");
+//     initButton.classList.add("hidden");
+// }
+
+export { init }
