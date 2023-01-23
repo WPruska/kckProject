@@ -18,62 +18,78 @@ let materialArray = [
 ];
 
 let cubes = new Array();
+let group1;
+let light;
+let directionalLight;
+let camera;
+let renderer;
+let mainSound;
+let count = 0;
+let controls;
 
-for (let i = 0; i <= 2; i++) {
-    cubes[i] = new Array();
-    for (let j = 0; j <= 2; j++) {
-        cubes[i][j] = new Array();
+function generateRubikCube(size) {
+    for (let i = 0; i < size; i++) {
+        cubes[i] = new Array();
+        for (let j = 0; j < size; j++) {
+            cubes[i][j] = new Array();
+        }
     }
-}
-
-for (let i = -1; i <= 1; i++) {
-    for (let j = -1; j <= 1; j++) {
-        for (let k = -1; k <= 1; k++) {
-            const cube = new THREE.Mesh(geometry, materialArray);
-            cube.position.set(i, j, k);
-            scene.add(cube);
-            cubes[i + 1][j + 1][k + 1] = cube;
+    let maxCoordinate = size - 1;
+    for (let i = -1; i < maxCoordinate; i++) {
+        for (let j = -1; j < maxCoordinate; j++) {
+            for (let k = -1; k < maxCoordinate; k++) {
+                const cube = new THREE.Mesh(geometry, materialArray);
+                cube.position.set(i, j, k);
+                scene.add(cube);
+                cubes[i + 1][j + 1][k + 1] = cube;
+            }
         }
     }
 }
 
-const light = new THREE.AmbientLight(0xffffff, 0.6);
-light.position.set(10, 20, 0);
-scene.add(light);
+function generateLight() {
+    light = new THREE.AmbientLight(0xffffff, 0.6);
+    light.position.set(10, 20, 0);
+    scene.add(light);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(10, 20, 0);
-scene.add(directionalLight);
+    directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(10, 20, 0);
+    scene.add(directionalLight);
+    group1 = addWallToGroup("side", 1);
+    group1.position.set(0, 0, 0);
+    scene.add(group1);
+}
 
-let group1 = addWallToGroup("side", 1);
-group1.position.set(0, 0, 0);
-scene.add(group1);
-
-const camera = new THREE.PerspectiveCamera(
-    80,
-    window.innerWidth / window.innerHeight,
-    1,
-    1000
-);
+function generateCamera() {
+    camera = new THREE.PerspectiveCamera(
+        80,
+        window.innerWidth / window.innerHeight,
+        1,
+        1000
+    );
+    setStartCameraPosition();
+}
 
 function setStartCameraPosition() {
     camera.position.set(4, 4, 4);
     camera.lookAt(0, 0, 0);
 }
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+function generateRenderer() {
+    renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+}
 
-let mainSound = new Audio();
-let mainSoundSrc = document.createElement("source");
-mainSoundSrc.type = "audio/mpeg";
-mainSoundSrc.src = "audio/audio.mp3";
-mainSound.appendChild(mainSoundSrc);
-mainSound.loop = true;
-
-let count = 0;
+function prepereMusic() {
+    mainSound = new Audio();
+    let mainSoundSrc = document.createElement("source");
+    mainSoundSrc.type = "audio/mpeg";
+    mainSoundSrc.src = "audio/audio.mp3";
+    mainSound.appendChild(mainSoundSrc);
+    mainSound.loop = true;
+}
 
 function xRotate() {
     setTimeout(() => {
@@ -104,25 +120,6 @@ function yRotate() {
         }
     }, 30);
 }
-
-window.addEventListener('resize', function () {
-    console.log('dsadsa');
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix;
-});
-
-window.addEventListener("click", () => {
-    count = 0;
-    window.requestAnimationFrame(xRotate);
-});
-
-window.addEventListener("keypress", () => {
-    count = 0;
-    window.requestAnimationFrame(yRotate);
-});
 
 function addWallToGroup(type, layer) {
     let group = new THREE.Group();
@@ -155,8 +152,6 @@ function addWallToGroup(type, layer) {
     return group;
 }
 
-let controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
 function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
@@ -164,10 +159,36 @@ function animate() {
 }
 
 function init() {
+    generateRubikCube(3);
+    generateLight();
+    generateCamera();
+    generateRenderer();
+    prepereMusic();
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.update();
     renderer.render(scene, camera);
     mainSound.play();
+    animate();
 }
 
+window.addEventListener('resize', function () {
+    console.log('dsadsa');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix;
+});
+
+window.addEventListener("click", () => {
+    count = 0;
+    window.requestAnimationFrame(xRotate);
+});
+
+window.addEventListener("keypress", () => {
+    count = 0;
+    window.requestAnimationFrame(yRotate);
+});
+
 export { init }
-export { animate }
 export { setStartCameraPosition }
