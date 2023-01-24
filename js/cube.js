@@ -209,6 +209,12 @@ function addWallToGroup(type, position) {
     return group;
 }
 
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    controls.update();
+}
+
 function init() {
     generateRubikCube(3);
     generateLight();
@@ -220,12 +226,6 @@ function init() {
     renderer.render(scene, camera);
     mainSound.play();
     animate();
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-    controls.update();
 }
 
 window.addEventListener('resize', function () {
@@ -244,8 +244,9 @@ window.addEventListener("click", (event) => {
 
     raycaster.setFromCamera( pointer, camera );
     const intersects = raycaster.intersectObjects( scene.children );
-
-    clickedPosition = intersects[0].object.position;
+    if(intersects.length > 0){
+        clickedPosition = intersects[0].object.position;
+    }
     console.log(clickedPosition);
 });
 
