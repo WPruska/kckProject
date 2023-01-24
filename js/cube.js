@@ -219,20 +219,22 @@ function rerenderCube(){
             scene.remove(cube);
         });
         count = 0;
-
+        let axisy = new THREE.Vector3(0, 1, 0);//y
+        let axisz = new THREE.Vector3(0, 0, 1);//z
+        let axisx = new THREE.Vector3(1, 0, 0);//x
         cubes.forEach((cube) => {
             if(group1.children.includes(cube)){
                 switch (rotType) {
                     case "y":
-                        cube.rotation.y += Math.PI / 2;
+                        cube.rotateOnWorldAxis(axisy, Math.PI / 2);
                         console.log("y rot");
                         break;
                     case "z":
-                        cube.rotation.z += Math.PI / 2;
+                        cube.rotateOnWorldAxis(axisz, Math.PI / 2);
                         console.log("z rot");
                         break;
                     case "x":
-                        cube.rotation.x += Math.PI / 2;
+                        cube.rotateOnWorldAxis(axisx, Math.PI / 2);
                         console.log("x rot");
                         break;
                 }
