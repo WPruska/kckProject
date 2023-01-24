@@ -31,6 +31,12 @@ const raycaster = new THREE.Raycaster();
 let clickedPosition;
 let cubeSound = new Audio();
 let rotType;
+const axisy = new THREE.Vector3(0, 1, 0);//y
+const axisz = new THREE.Vector3(0, 0, 1);//z
+const axisx = new THREE.Vector3(1, 0, 0);//x
+const axis_y = new THREE.Vector3(0, -1, 0);//-y
+const axis_z = new THREE.Vector3(0, 0, -1);//-z
+const axis_x = new THREE.Vector3(-1, 0, 0);//-x
 
 function generateRubikCube(size) {
     let maxCoordinate = size - 1;
@@ -94,7 +100,12 @@ function prepereMusic() {
 
 function xRotate() {
     setTimeout(() => {
-        group1.rotation.x += Math.PI / 16;
+        if(rotType === '+x'){
+            group1.rotation.x += Math.PI / 16;
+        }
+        if(rotType === '-x'){
+            group1.rotation.x -= Math.PI / 16;
+        }
         renderer.render(scene, camera);
         count++;
         if (count == 4) {
@@ -110,7 +121,12 @@ function xRotate() {
 
 function yRotate() {
     setTimeout(() => {
-        group1.rotation.y += Math.PI / 16;
+        if(rotType === '+y'){
+            group1.rotation.y += Math.PI / 16;
+        }
+        if(rotType === '-y'){
+            group1.rotation.y -= Math.PI / 16;
+        }
         renderer.render(scene, camera);
         count++;
         if (count == 4) {
@@ -126,7 +142,12 @@ function yRotate() {
 
 function zRotate() {
     setTimeout(() => {
-        group1.rotation.z += Math.PI / 16;
+        if( rotType === '+z'){
+            group1.rotation.z += Math.PI / 16;
+        }
+        if(rotType === '-z'){
+            group1.rotation.z -= Math.PI / 16;
+        }
         renderer.render(scene, camera);
         count++;
         if (count == 4) {
@@ -141,14 +162,22 @@ function zRotate() {
 }
 
 function refreshPositions(type){
+    let newx;
+    let newy;
+    let newz;
     cubes.forEach((cube) => {
         switch (type) {
             case "y":
                 if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y)){
                     let x = cube.position.x;
                     let z = cube.position.z;
-                    let newx = z === 0? 0 : z;
-                    let newz = -x === 0? 0 : -x;
+                    if(rotType === '+y'){
+                        newx = z === 0? 0 : z;
+                        newz = -x === 0? 0 : -x;
+                    } else {
+                        newx = -z === 0? 0 : -z;
+                        newz = x === 0? 0 : x;
+                    }
                     cube.position.set(newx, cube.position.y, newz);
                 }
             break;
@@ -156,8 +185,13 @@ function refreshPositions(type){
                 if(Math.round(cube.position.z)=== Math.round(group1.children[0].position.z)){
                     let x = cube.position.x;
                     let y = cube.position.y;
-                    let newx = -y === 0? 0 : -y;
-                    let newy = x === 0? 0 : x;
+                    if(rotType === '+z'){
+                        newx = -y === 0? 0 : -y;
+                        newy = x === 0? 0 : x;
+                    } else {
+                        newx = y === 0? 0 : y;
+                        newy = -x === 0? 0 : -x;
+                    }
                     console.log('gvyiu');
                     console.log(x);
                     console.log(y);
@@ -170,8 +204,13 @@ function refreshPositions(type){
                 if(Math.round(cube.position.x)=== Math.round(group1.children[0].position.x)){
                     let y = cube.position.y;
                     let z = cube.position.z;
-                    let newy = -z === 0? 0 : -z;
-                    let newz = y === 0? 0 : y;
+                    if(rotType === '+x'){
+                        newy = -z === 0? 0 : -z;
+                        newz = y === 0? 0 : y;
+                    } else {
+                        newy = z === 0? 0 : z;
+                        newz = -y === 0? 0 : -y;
+                    }
                     cube.position.set(cube.position.x, newy, newz);
                 }
                 break;
@@ -219,22 +258,31 @@ function rerenderCube(){
             scene.remove(cube);
         });
         count = 0;
-        let axisy = new THREE.Vector3(0, 1, 0);//y
-        let axisz = new THREE.Vector3(0, 0, 1);//z
-        let axisx = new THREE.Vector3(1, 0, 0);//x
         cubes.forEach((cube) => {
             if(group1.children.includes(cube)){
                 switch (rotType) {
-                    case "y":
+                    case "+y":
                         cube.rotateOnWorldAxis(axisy, Math.PI / 2);
                         console.log("y rot");
                         break;
-                    case "z":
+                    case "+z":
                         cube.rotateOnWorldAxis(axisz, Math.PI / 2);
                         console.log("z rot");
                         break;
-                    case "x":
+                    case "+x":
                         cube.rotateOnWorldAxis(axisx, Math.PI / 2);
+                        console.log("x rot");
+                        break;
+                    case "-y":
+                        cube.rotateOnWorldAxis(axis_y, Math.PI / 2);
+                        console.log("y rot");
+                        break;
+                    case "-z":
+                        cube.rotateOnWorldAxis(axis_z, Math.PI / 2);
+                        console.log("z rot");
+                        break;
+                    case "-x":
+                        cube.rotateOnWorldAxis(axis_x, Math.PI / 2);
                         console.log("x rot");
                         break;
                 }
@@ -288,26 +336,51 @@ window.addEventListener("click", (event) => {
 
 window.addEventListener("keydown", (event) => {
     console.log(event.key);
-    if(event.key == 'ArrowLeft' && clickedPosition!=null){
-        group1 = addWallToGroup("z",clickedPosition);
-        rotType = "z";
-        scene.add(group1);
-        count = 0;
-        window.requestAnimationFrame(zRotate);
-    }
-    if(event.key == 'ArrowRight' && clickedPosition!=null){
-        group1 = addWallToGroup("y",clickedPosition);
-        rotType = "y";
-        scene.add(group1);
-        count = 0;
-        window.requestAnimationFrame(yRotate);
-    }
-    if(event.key == 'ArrowDown' && clickedPosition!=null){
-        group1 = addWallToGroup("x",clickedPosition);
-        rotType = "x";
-        scene.add(group1);
-        count = 0;
-        window.requestAnimationFrame(xRotate);
+    if(clickedPosition!=null){
+        switch (event.key) {
+            case "1":
+                group1 = addWallToGroup("x",clickedPosition);
+                rotType = "+x";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(xRotate);
+                break;
+            case "2":
+                group1 = addWallToGroup("x",clickedPosition);
+                rotType = "-x";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(xRotate);
+                break;
+            case "3":
+                group1 = addWallToGroup("y",clickedPosition);
+                rotType = "+y";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(yRotate);
+                break;
+            case "4":
+                group1 = addWallToGroup("y",clickedPosition);
+                rotType = "-y";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(yRotate);
+                break;
+            case "5":
+                group1 = addWallToGroup("z",clickedPosition);
+                rotType = "+z";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(zRotate);
+                break;
+            case "6":
+                group1 = addWallToGroup("z",clickedPosition);
+                rotType = "-z";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(zRotate);
+                break;
+        }
     }
     clickedPosition = null;
 });
