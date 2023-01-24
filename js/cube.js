@@ -39,10 +39,11 @@ const axis_z = new THREE.Vector3(0, 0, -1);//-z
 const axis_x = new THREE.Vector3(-1, 0, 0);//-x
 
 function generateRubikCube(size) {
-    let maxCoordinate = size - 1;
-    for (let i = -1; i < maxCoordinate; i++) {
-        for (let j = -1; j < maxCoordinate; j++) {
-            for (let k = -1; k < maxCoordinate; k++) {
+    let stardCord = -(size * 0.5 - 0.5);
+    let maxCoordinate = size + stardCord;
+    for (let i = stardCord; i < maxCoordinate; i++) {
+        for (let j = stardCord; j < maxCoordinate; j++) {
+            for (let k = stardCord; k < maxCoordinate; k++) {
                 const cube = new THREE.Mesh(geometry, materialArray);
                 cube.position.set(i, j, k);
                 scene.add(cube);
@@ -192,11 +193,6 @@ function refreshPositions(type){
                         newx = y === 0? 0 : y;
                         newy = -x === 0? 0 : -x;
                     }
-                    console.log('gvyiu');
-                    console.log(x);
-                    console.log(y);
-                    console.log(newx);
-                    console.log(newy);
                     cube.position.set(newx, newy, cube.position.z);
                 }
                 break;
@@ -216,7 +212,6 @@ function refreshPositions(type){
                 break;
         }
     });
-    //group1.clear();
     count++;
     rerenderCube();
 }
@@ -263,27 +258,21 @@ function rerenderCube(){
                 switch (rotType) {
                     case "+y":
                         cube.rotateOnWorldAxis(axisy, Math.PI / 2);
-                        console.log("y rot");
                         break;
                     case "+z":
                         cube.rotateOnWorldAxis(axisz, Math.PI / 2);
-                        console.log("z rot");
                         break;
                     case "+x":
                         cube.rotateOnWorldAxis(axisx, Math.PI / 2);
-                        console.log("x rot");
                         break;
                     case "-y":
                         cube.rotateOnWorldAxis(axis_y, Math.PI / 2);
-                        console.log("y rot");
                         break;
                     case "-z":
                         cube.rotateOnWorldAxis(axis_z, Math.PI / 2);
-                        console.log("z rot");
                         break;
                     case "-x":
                         cube.rotateOnWorldAxis(axis_x, Math.PI / 2);
-                        console.log("x rot");
                         break;
                 }
             }
@@ -300,7 +289,7 @@ function animate() {
 }
 
 function init() {
-    generateRubikCube(3);
+    generateRubikCube(7);
     generateLight();
     generateCamera();
     generateRenderer();
@@ -313,7 +302,6 @@ function init() {
 }
 
 window.addEventListener('resize', function () {
-    console.log('dsadsa');
     let width = window.innerWidth;
     let height = window.innerHeight;
     renderer.setSize(width, height);
@@ -331,49 +319,47 @@ window.addEventListener("click", (event) => {
     if(intersects.length > 0){
         clickedPosition = intersects[0].object.position;
     }
-    console.log(clickedPosition);
 });
 
 window.addEventListener("keydown", (event) => {
-    console.log(event.key);
     if(clickedPosition!=null){
         switch (event.key) {
-            case "1":
+            case "x":
                 group1 = addWallToGroup("x",clickedPosition);
                 rotType = "+x";
                 scene.add(group1);
                 count = 0;
                 window.requestAnimationFrame(xRotate);
                 break;
-            case "2":
+            case "X":
                 group1 = addWallToGroup("x",clickedPosition);
                 rotType = "-x";
                 scene.add(group1);
                 count = 0;
                 window.requestAnimationFrame(xRotate);
                 break;
-            case "3":
+            case "c":
                 group1 = addWallToGroup("y",clickedPosition);
                 rotType = "+y";
                 scene.add(group1);
                 count = 0;
                 window.requestAnimationFrame(yRotate);
                 break;
-            case "4":
+            case "C":
                 group1 = addWallToGroup("y",clickedPosition);
                 rotType = "-y";
                 scene.add(group1);
                 count = 0;
                 window.requestAnimationFrame(yRotate);
                 break;
-            case "5":
+            case "z":
                 group1 = addWallToGroup("z",clickedPosition);
                 rotType = "+z";
                 scene.add(group1);
                 count = 0;
                 window.requestAnimationFrame(zRotate);
                 break;
-            case "6":
+            case "Z":
                 group1 = addWallToGroup("z",clickedPosition);
                 rotType = "-z";
                 scene.add(group1);
