@@ -37,6 +37,8 @@ const axisx = new THREE.Vector3(1, 0, 0);//x
 const axis_y = new THREE.Vector3(0, -1, 0);//-y
 const axis_z = new THREE.Vector3(0, 0, -1);//-z
 const axis_x = new THREE.Vector3(-1, 0, 0);//-x
+let moves = new Array();
+let move = {};
 
 function generateRubikCube(size) {
     let stardCord = -(size * 0.5 - 0.5);
@@ -288,8 +290,63 @@ function animate() {
     controls.update();
 }
 
+function solveCube() {
+    moves.forEach(() => {
+        // console.log("Solve step");
+        move = moves.pop();
+        clickedPosition = move.pos;
+        // group1 = move.gru; 
+        rotType = move.rot;
+        console.log(clickedPosition, rotType); //DEBUG zmienne po przypisaniu ze stacka; Wywala Uncaught TypeError: group1.children[0] is undefined, ale nie na każdym kroku
+        switch (rotType) {                      //Ma problem z refreshPositions() na tych linijkach if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y))
+            case "-x":
+                group1 = addWallToGroup("x",clickedPosition);
+                rotType = "+x";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(xRotate);
+                break;
+            case "+x":
+                group1 = addWallToGroup("x",clickedPosition);
+                rotType = "-x";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(xRotate);
+                break;
+            case "-y":
+                group1 = addWallToGroup("y",clickedPosition);
+                rotType = "+y";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(yRotate);
+                break;
+            case "+y":
+                group1 = addWallToGroup("y",clickedPosition);
+                rotType = "-y";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(yRotate);
+                break;
+            case "-z":
+                group1 = addWallToGroup("z",clickedPosition);
+                rotType = "+z";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(zRotate);
+                break;
+            case "+z":
+                group1 = addWallToGroup("z",clickedPosition);
+                rotType = "-z";
+                scene.add(group1);
+                count = 0;
+                window.requestAnimationFrame(zRotate);
+                break;
+        }
+    });
+}
+
 function init() {
-    generateRubikCube(7);
+    generateRubikCube(3);
     generateLight();
     generateCamera();
     generateRenderer();
@@ -367,8 +424,21 @@ window.addEventListener("keydown", (event) => {
                 window.requestAnimationFrame(zRotate);
                 break;
         }
+        console.log(group1); //DEBUG group1 po każdym ruchu
+        moves.push({
+            pos: clickedPosition,
+            rot: rotType
+        });
     }
-    clickedPosition = null;
+    clickedPosition = null; 
+        //DEBUG keypress a loguje mi cały array moves
+        if (event.key == "a")  {
+            moves.forEach(function(entry) {
+            console.log(entry);
+        });
+        } else if (event.key == "s"){
+            solveCube();
+        }
 });
 
 export { init }
