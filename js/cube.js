@@ -31,12 +31,16 @@ const raycaster = new THREE.Raycaster();
 let clickedPosition;
 let cubeSound = new Audio();
 let rotType;
+const rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"];
 const axisy = new THREE.Vector3(0, 1, 0);//y
 const axisz = new THREE.Vector3(0, 0, 1);//z
 const axisx = new THREE.Vector3(1, 0, 0);//x
 const axis_y = new THREE.Vector3(0, -1, 0);//-y
 const axis_z = new THREE.Vector3(0, 0, -1);//-z
 const axis_x = new THREE.Vector3(-1, 0, 0);//-x
+let moves = new Array();
+let move = {};
+let animating = false;
 
 function generateRubikCube(size) {
     let stardCord = -(size * 0.5 - 0.5);
@@ -100,66 +104,81 @@ function prepereMusic() {
 }
 
 function xRotate() {
-    setTimeout(() => {
-        if(rotType === '+x'){
-            group1.rotation.x += Math.PI / 16;
-        }
-        if(rotType === '-x'){
-            group1.rotation.x -= Math.PI / 16;
-        }
-        renderer.render(scene, camera);
-        count++;
-        if (count == 4) {
-            cubeSound.play();
-        }
-        if (count < 8) {
-            window.requestAnimationFrame(xRotate);
-        } else {
-            refreshPositions("x");
-        }
-    }, 30);
+    // if(!animating){
+        // animating = true;
+        setTimeout(() => {
+            if(rotType === '+x'){
+                group1.rotation.x += Math.PI / 16;
+            }
+            if(rotType === '-x'){
+                group1.rotation.x -= Math.PI / 16;
+            }
+            renderer.render(scene, camera);
+            count++;
+            if (count == 4) {
+                cubeSound.play();
+            }
+            if (count < 8) {
+                window.requestAnimationFrame(xRotate);
+            } else {
+                refreshPositions("x");
+            }
+        }, 30);
+    // } else {
+        // setTimeout(zRotate,1000);
+    // }
 }
 
 function yRotate() {
-    setTimeout(() => {
-        if(rotType === '+y'){
-            group1.rotation.y += Math.PI / 16;
-        }
-        if(rotType === '-y'){
-            group1.rotation.y -= Math.PI / 16;
-        }
-        renderer.render(scene, camera);
-        count++;
-        if (count == 4) {
-            cubeSound.play();
-        }
-        if (count < 8) {
-            window.requestAnimationFrame(yRotate);
-        } else {
-            refreshPositions("y");
-        }
-    }, 30);
+    // if(!animating){
+        // animating = true;
+        setTimeout(() => {
+            if(rotType === '+y'){
+                group1.rotation.y += Math.PI / 16;
+            }
+            if(rotType === '-y'){
+                group1.rotation.y -= Math.PI / 16;
+            }
+            renderer.render(scene, camera);
+            count++;
+            if (count == 4) {
+                cubeSound.play();
+            }
+            if (count < 8) {
+                window.requestAnimationFrame(yRotate);
+            } else {
+                refreshPositions("y");
+            }
+        }, 30);
+    // } else {
+        // setTimeout(zRotate,1000);
+    // }
 }
 
 function zRotate() {
-    setTimeout(() => {
-        if( rotType === '+z'){
-            group1.rotation.z += Math.PI / 16;
-        }
-        if(rotType === '-z'){
-            group1.rotation.z -= Math.PI / 16;
-        }
-        renderer.render(scene, camera);
-        count++;
-        if (count == 4) {
-            cubeSound.play();
-        }
-        if (count < 8) {
-            window.requestAnimationFrame(zRotate);
-        } else {
-            refreshPositions("z");
-        }
-    }, 30);
+    // if(!animating){
+        // animating = true;
+        setTimeout(() => {
+            if( rotType === '+z'){
+                group1.rotation.z += Math.PI / 16;
+            }
+            if(rotType === '-z'){
+                group1.rotation.z -= Math.PI / 16;
+            }
+            renderer.render(scene, camera);
+            count++;
+            if (count == 4) {
+                cubeSound.play();
+            }
+            if (count < 8) {
+                window.requestAnimationFrame(zRotate);
+            } else {
+                refreshPositions("z");
+            }
+        }, 30);
+    // } else {
+        // setTimeout(zRotate,1000);
+    // }
 }
 
 function refreshPositions(type){
@@ -169,6 +188,8 @@ function refreshPositions(type){
     cubes.forEach((cube) => {
         switch (type) {
             case "y":
+                // console.log("refreshPositions(y)"); //DEBUG
+                // console.log(group1); //DEBUG Kto porwał dzieci???
                 if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y)){
                     let x = cube.position.x;
                     let z = cube.position.z;
@@ -183,6 +204,8 @@ function refreshPositions(type){
                 }
             break;
             case "z":
+                // console.log("refreshPositions(z)"); //DEBUG
+                // console.log(group1); //DEBUG Kto porwał dzieci???
                 if(Math.round(cube.position.z)=== Math.round(group1.children[0].position.z)){
                     let x = cube.position.x;
                     let y = cube.position.y;
@@ -197,6 +220,8 @@ function refreshPositions(type){
                 }
                 break;
             case "x":
+                // console.log("refreshPositions(x)"); //DEBUG
+                // console.log(group1); //DEBUG Kto porwał dzieci???
                 if(Math.round(cube.position.x)=== Math.round(group1.children[0].position.x)){
                     let y = cube.position.y;
                     let z = cube.position.z;
@@ -279,6 +304,7 @@ function rerenderCube(){
             scene.add(cube);
         });
         scene.remove(group1);
+        animating = false;
     }
 }
 
@@ -288,8 +314,82 @@ function animate() {
     controls.update();
 }
 
+function solveCube() {
+        moves.forEach(() => {
+            if (count == 0){
+                move = moves.pop();
+                rotType = move.rot;
+                console.log(move.pos, rotType); //DEBUG zmienne po przypisaniu ze stacka; Wywala Uncaught TypeError: group1.children[0] is undefined, ale nie na każdym kroku
+                switch (rotType) {                       //Ma problem z refreshPositions() na tych linijkach if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y))
+                    case "-x":                  //Jakiś asynchroniczny bulszit - wykminić jak blokować animację do skończenia poprzedniej
+                        group1 = addWallToGroup("x",move.pos);
+                        rotType = "+x";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(xRotate);
+                        break;
+                    case "+x":
+                        group1 = addWallToGroup("x",move.pos);
+                        rotType = "-x";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(xRotate);
+                        break;
+                    case "-y":
+                        group1 = addWallToGroup("y",move.pos);
+                        rotType = "+y";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(yRotate);
+                        break;
+                    case "+y":
+                        group1 = addWallToGroup("y",move.pos);
+                        rotType = "-y";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(yRotate);
+                        break;
+                    case "-z":
+                        group1 = addWallToGroup("z",move.pos);
+                        rotType = "+z";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(zRotate);
+                        break;
+                    case "+z":
+                        group1 = addWallToGroup("z",move.pos);
+                        rotType = "-z";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(zRotate);
+                        break;
+                }
+            }
+        });
+}
+
+function shuffleCube(iterations) {
+    let randPos = new THREE.Vector3();
+    let randRot = new String;    
+    for(let i = 0; i < iterations; i++){
+        randPos.x = Math.floor((Math.random() * 3)-1);
+        randPos.y = Math.floor((Math.random() * 3)-1);
+        randPos.z = Math.floor((Math.random() * 3)-1);
+        randRot = rotTypeArr[Math.floor(Math.random() * 5)];
+        console.log(randPos,randRot); //DEBUG podglądam wylosowane wartsci
+        setTimeout(() => {
+            group1 = addWallToGroup(randRot.substring(1,1),randPos);
+            rotType = randRot;
+            scene.add(group1);
+            count = 0;
+            window.requestAnimationFrame(xRotate);
+        }, 500);
+    }
+
+}
+
 function init() {
-    generateRubikCube(7);
+    generateRubikCube(3);
     generateLight();
     generateCamera();
     generateRenderer();
@@ -319,56 +419,78 @@ window.addEventListener("click", (event) => {
     if(intersects.length > 0){
         clickedPosition = intersects[0].object.position;
     }
+    console.log(clickedPosition);
 });
 
 window.addEventListener("keydown", (event) => {
-    if(clickedPosition!=null){
-        switch (event.key) {
-            case "x":
-                group1 = addWallToGroup("x",clickedPosition);
-                rotType = "+x";
-                scene.add(group1);
-                count = 0;
-                window.requestAnimationFrame(xRotate);
-                break;
-            case "X":
-                group1 = addWallToGroup("x",clickedPosition);
-                rotType = "-x";
-                scene.add(group1);
-                count = 0;
-                window.requestAnimationFrame(xRotate);
-                break;
-            case "c":
-                group1 = addWallToGroup("y",clickedPosition);
-                rotType = "+y";
-                scene.add(group1);
-                count = 0;
-                window.requestAnimationFrame(yRotate);
-                break;
-            case "C":
-                group1 = addWallToGroup("y",clickedPosition);
-                rotType = "-y";
-                scene.add(group1);
-                count = 0;
-                window.requestAnimationFrame(yRotate);
-                break;
-            case "z":
-                group1 = addWallToGroup("z",clickedPosition);
-                rotType = "+z";
-                scene.add(group1);
-                count = 0;
-                window.requestAnimationFrame(zRotate);
-                break;
-            case "Z":
-                group1 = addWallToGroup("z",clickedPosition);
-                rotType = "-z";
-                scene.add(group1);
-                count = 0;
-                window.requestAnimationFrame(zRotate);
-                break;
+    //DEBUG keypress 'a' loguje mi cały array moves
+    let posClone = new THREE.Vector3;
+    var rotClone = new String;
+    if (event.key == "a")  {
+        moves.forEach(function(entry) {
+        console.log(entry);
+    });
+    } else if (event.key == "s"){
+        solveCube();
+    } else if (event.key == "d"){
+        shuffleCube(5);
+    }        
+        if(clickedPosition!=null){
+            switch (event.key) {
+                case "x":
+                    group1 = addWallToGroup("x",clickedPosition);
+                    rotType = "+x";
+                    scene.add(group1);
+                    count = 0;
+                    window.requestAnimationFrame(xRotate);
+                    break;
+                case "X":
+                    group1 = addWallToGroup("x",clickedPosition);
+                    rotType = "-x";
+                    scene.add(group1);
+                    count = 0;
+                    window.requestAnimationFrame(xRotate);
+                    break;
+                case "c":
+                    group1 = addWallToGroup("y",clickedPosition);
+                    rotType = "+y";
+                    scene.add(group1);
+                    count = 0;
+                    window.requestAnimationFrame(yRotate);
+                    break;
+                case "C":
+                    group1 = addWallToGroup("y",clickedPosition);
+                    rotType = "-y";
+                    scene.add(group1);
+                    count = 0;
+                    window.requestAnimationFrame(yRotate);
+                    break;
+                case "z":
+                    group1 = addWallToGroup("z",clickedPosition);
+                    rotType = "+z";
+                    scene.add(group1);
+                    count = 0;
+                    window.requestAnimationFrame(zRotate);
+                    break;
+                case "Z":
+                    group1 = addWallToGroup("z",clickedPosition);
+                    rotType = "-z";
+                    scene.add(group1);
+                    count = 0;
+                    window.requestAnimationFrame(zRotate);
+                    break;
+            }
+            // console.log(group1); //DEBUG group1 po każdym ruchu
+            posClone = clickedPosition;
+            rotClone = rotType;
+            moves.push({
+                pos: posClone,
+                rot: rotClone
+            });
+            posClone = null;
+            rotClone = null;
         }
-    }
-    clickedPosition = null;
+    clickedPosition = null; 
 });
 
 export { init }
