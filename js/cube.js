@@ -104,66 +104,81 @@ function prepereMusic() {
 }
 
 function xRotate() {
-    setTimeout(() => {
-        if(rotType === '+x'){
-            group1.rotation.x += Math.PI / 16;
-        }
-        if(rotType === '-x'){
-            group1.rotation.x -= Math.PI / 16;
-        }
-        renderer.render(scene, camera);
-        count++;
-        if (count == 4) {
-            cubeSound.play();
-        }
-        if (count < 8) {
-            window.requestAnimationFrame(xRotate);
-        } else {
-            refreshPositions("x");
-        }
-    }, 30);
+    // if(!animating){
+        // animating = true;
+        setTimeout(() => {
+            if(rotType === '+x'){
+                group1.rotation.x += Math.PI / 16;
+            }
+            if(rotType === '-x'){
+                group1.rotation.x -= Math.PI / 16;
+            }
+            renderer.render(scene, camera);
+            count++;
+            if (count == 4) {
+                cubeSound.play();
+            }
+            if (count < 8) {
+                window.requestAnimationFrame(xRotate);
+            } else {
+                refreshPositions("x");
+            }
+        }, 30);
+    // } else {
+        // setTimeout(zRotate,1000);
+    // }
 }
 
 function yRotate() {
-    setTimeout(() => {
-        if(rotType === '+y'){
-            group1.rotation.y += Math.PI / 16;
-        }
-        if(rotType === '-y'){
-            group1.rotation.y -= Math.PI / 16;
-        }
-        renderer.render(scene, camera);
-        count++;
-        if (count == 4) {
-            cubeSound.play();
-        }
-        if (count < 8) {
-            window.requestAnimationFrame(yRotate);
-        } else {
-            refreshPositions("y");
-        }
-    }, 30);
+    // if(!animating){
+        // animating = true;
+        setTimeout(() => {
+            if(rotType === '+y'){
+                group1.rotation.y += Math.PI / 16;
+            }
+            if(rotType === '-y'){
+                group1.rotation.y -= Math.PI / 16;
+            }
+            renderer.render(scene, camera);
+            count++;
+            if (count == 4) {
+                cubeSound.play();
+            }
+            if (count < 8) {
+                window.requestAnimationFrame(yRotate);
+            } else {
+                refreshPositions("y");
+            }
+        }, 30);
+    // } else {
+        // setTimeout(zRotate,1000);
+    // }
 }
 
 function zRotate() {
-    setTimeout(() => {
-        if( rotType === '+z'){
-            group1.rotation.z += Math.PI / 16;
-        }
-        if(rotType === '-z'){
-            group1.rotation.z -= Math.PI / 16;
-        }
-        renderer.render(scene, camera);
-        count++;
-        if (count == 4) {
-            cubeSound.play();
-        }
-        if (count < 8) {
-            window.requestAnimationFrame(zRotate);
-        } else {
-            refreshPositions("z");
-        }
-    }, 30);
+    // if(!animating){
+        // animating = true;
+        setTimeout(() => {
+            if( rotType === '+z'){
+                group1.rotation.z += Math.PI / 16;
+            }
+            if(rotType === '-z'){
+                group1.rotation.z -= Math.PI / 16;
+            }
+            renderer.render(scene, camera);
+            count++;
+            if (count == 4) {
+                cubeSound.play();
+            }
+            if (count < 8) {
+                window.requestAnimationFrame(zRotate);
+            } else {
+                refreshPositions("z");
+            }
+        }, 30);
+    // } else {
+        // setTimeout(zRotate,1000);
+    // }
 }
 
 function refreshPositions(type){
@@ -300,69 +315,63 @@ function animate() {
 }
 
 function solveCube() {
-    if(!animating){
         moves.forEach(() => {
-            animating = true;
-            move = moves.pop();
-            rotType = move.rot;
-            console.log(move.pos, rotType); //DEBUG zmienne po przypisaniu ze stacka; Wywala Uncaught TypeError: group1.children[0] is undefined, ale nie na każdym kroku
-            switch (rotType) {                       //Ma problem z refreshPositions() na tych linijkach if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y))
-                case "-x":
-                    group1 = addWallToGroup("x",move.pos);
-                    rotType = "+x";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(xRotate);
-                    break;
-                case "+x":
-                    group1 = addWallToGroup("x",move.pos);
-                    rotType = "-x";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(xRotate);
-                    break;
-                case "-y":
-                    group1 = addWallToGroup("y",move.pos);
-                    rotType = "+y";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(yRotate);
-                    break;
-                case "+y":
-                    group1 = addWallToGroup("y",move.pos);
-                    rotType = "-y";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(yRotate);
-                    break;
-                case "-z":
-                    group1 = addWallToGroup("z",move.pos);
-                    rotType = "+z";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(zRotate);
-                    break;
-                case "+z":
-                    group1 = addWallToGroup("z",move.pos);
-                    rotType = "-z";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(zRotate);
-                    break;
+            if (count == 0){
+                move = moves.pop();
+                rotType = move.rot;
+                console.log(move.pos, rotType); //DEBUG zmienne po przypisaniu ze stacka; Wywala Uncaught TypeError: group1.children[0] is undefined, ale nie na każdym kroku
+                switch (rotType) {                       //Ma problem z refreshPositions() na tych linijkach if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y))
+                    case "-x":                  //Jakiś asynchroniczny bulszit - wykminić jak blokować animację do skończenia poprzedniej
+                        group1 = addWallToGroup("x",move.pos);
+                        rotType = "+x";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(xRotate);
+                        break;
+                    case "+x":
+                        group1 = addWallToGroup("x",move.pos);
+                        rotType = "-x";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(xRotate);
+                        break;
+                    case "-y":
+                        group1 = addWallToGroup("y",move.pos);
+                        rotType = "+y";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(yRotate);
+                        break;
+                    case "+y":
+                        group1 = addWallToGroup("y",move.pos);
+                        rotType = "-y";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(yRotate);
+                        break;
+                    case "-z":
+                        group1 = addWallToGroup("z",move.pos);
+                        rotType = "+z";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(zRotate);
+                        break;
+                    case "+z":
+                        group1 = addWallToGroup("z",move.pos);
+                        rotType = "-z";
+                        scene.add(group1);
+                        count = 0;
+                        window.requestAnimationFrame(zRotate);
+                        break;
+                }
             }
         });
-    } else {
-        setTimeout(() => {
-            solveCube();
-        }, 1000);
-    }
 }
 
 function shuffleCube(iterations) {
     let randPos = new THREE.Vector3();
     let randRot = new String;    
-    for(let i =0; i <= iterations; i++){
-        animating = true;
+    for(let i = 0; i < iterations; i++){
         randPos.x = Math.floor((Math.random() * 3)-1);
         randPos.y = Math.floor((Math.random() * 3)-1);
         randPos.z = Math.floor((Math.random() * 3)-1);
@@ -425,8 +434,7 @@ window.addEventListener("keydown", (event) => {
         solveCube();
     } else if (event.key == "d"){
         shuffleCube(5);
-    }
-    if (!animating){        //Jakiś asynchroniczny bulszit - wykminić jak blokować animację do skończenia poprzedniej
+    }        
         if(clickedPosition!=null){
             switch (event.key) {
                 case "x":
@@ -483,7 +491,6 @@ window.addEventListener("keydown", (event) => {
             rotClone = null;
         }
     clickedPosition = null; 
-    }
 });
 
 export { init }
