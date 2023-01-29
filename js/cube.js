@@ -1,502 +1,499 @@
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
 
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x19d7f8);
-
-let loader = new THREE.TextureLoader();
-
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-let materialArray = [
-    new THREE.MeshStandardMaterial({ map: loader.load("img/red.png") }),
-    new THREE.MeshStandardMaterial({ map: loader.load("img/orange.png") }),
-    new THREE.MeshStandardMaterial({ map: loader.load("img/white.png") }),
-    new THREE.MeshStandardMaterial({ map: loader.load("img/yellow.png") }),
-    new THREE.MeshStandardMaterial({ map: loader.load("img/blue.png") }),
-    new THREE.MeshStandardMaterial({ map: loader.load("img/green.png") }),
-];
-
-let cubes = new Array();
-let group1;
-let light;
-let directionalLight;
-let camera;
-let renderer;
-let mainSound;
-let count = 0;
-let controls;
-const pointer = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
-let clickedPosition;
-let cubeSound = new Audio();
-let rotType;
-const rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"];
-const axisy = new THREE.Vector3(0, 1, 0);//y
-const axisz = new THREE.Vector3(0, 0, 1);//z
-const axisx = new THREE.Vector3(1, 0, 0);//x
-const axis_y = new THREE.Vector3(0, -1, 0);//-y
-const axis_z = new THREE.Vector3(0, 0, -1);//-z
-const axis_x = new THREE.Vector3(-1, 0, 0);//-x
-let moves = new Array();
-let move = {};
-let cubeSize = 3; //Wymiar kostki
-let shuffleIterations = 10; //Ilość przetasowań
-let delayTime = 150 * cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
-
-function generateRubikCube(size) {
-    let stardCord = -(size * 0.5 - 0.5);
-    let maxCoordinate = size + stardCord;
-    for (let i = stardCord; i < maxCoordinate; i++) {
-        for (let j = stardCord; j < maxCoordinate; j++) {
-            for (let k = stardCord; k < maxCoordinate; k++) {
-                const cube = new THREE.Mesh(geometry, materialArray);
-                cube.position.set(i, j, k);
-                scene.add(cube);
-                cubes.push(cube);
-            }
-        }
-    }
-}
-
-function generateLight() {
-    light = new THREE.AmbientLight(0xffffff, 0.6);
-    light.position.set(10, 20, 0);
-    scene.add(light);
-
-    directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(10, 20, 0);
-    scene.add(directionalLight);
-}
-
-function generateCamera() {
-    camera = new THREE.PerspectiveCamera(
-        80,
-        window.innerWidth / window.innerHeight,
-        1,
-        1000
-    );
-    setStartCameraPosition();
-}
-
-function setStartCameraPosition() {
-    let basePosition = cubeSize + 1;
-    camera.position.set(basePosition, basePosition, basePosition);
-    camera.lookAt(0, 0, 0);
-}
-
-function generateRenderer() {
-    renderer = new THREE.WebGLRenderer();
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-}
-
-function prepereMusic() {
-    mainSound = new Audio();
-    let mainSoundSrc = document.createElement("source");
-    mainSoundSrc.type = "audio/mpeg";
-    mainSoundSrc.src = "audio/audio.mp3";
-    mainSound.appendChild(mainSoundSrc);
-    mainSound.loop = true;
-
-    let cubeSoundSrc = document.createElement("source");
-    cubeSoundSrc.type = "audio/mpeg";
-    cubeSoundSrc.src = "audio/kostka.mp3";
-    cubeSound.appendChild(cubeSoundSrc);
-}
-
-function xRotate() {
-        setTimeout(() => {
-            if(rotType === '+x'){
-                group1.rotation.x += Math.PI / 16;
-            }
-            if(rotType === '-x'){
-                group1.rotation.x -= Math.PI / 16;
-            }
-            renderer.render(scene, camera);
-            count++;
-            if (count == 4) {
-                cubeSound.play();
-            }
-            if (count < 8) {
-                window.requestAnimationFrame(xRotate);
-            } else {
-                refreshPositions("x");
-            }
-        }, 30);
-}
-
-function yRotate() {
-        setTimeout(() => {
-            if(rotType === '+y'){
-                group1.rotation.y += Math.PI / 16;
-            }
-            if(rotType === '-y'){
-                group1.rotation.y -= Math.PI / 16;
-            }
-            renderer.render(scene, camera);
-            count++;
-            if (count == 4) {
-                cubeSound.play();
-            }
-            if (count < 8) {
-                window.requestAnimationFrame(yRotate);
-            } else {
-                refreshPositions("y");
-            }
-        }, 30);
-}
-
-function zRotate() {
-        setTimeout(() => {
-            if( rotType === '+z'){
-                group1.rotation.z += Math.PI / 16;
-            }
-            if(rotType === '-z'){
-                group1.rotation.z -= Math.PI / 16;
-            }
-            renderer.render(scene, camera);
-            count++;
-            if (count == 4) {
-                cubeSound.play();
-            }
-            if (count < 8) {
-                window.requestAnimationFrame(zRotate);
-            } else {
-                refreshPositions("z");
-            }
-        }, 30);
-}
-
-function refreshPositions(type){
-    let newx;
-    let newy;
-    let newz;
-    cubes.forEach((cube) => {
-        switch (type) {
-            case "y":
-                if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y)){
-                    let x = cube.position.x;
-                    let z = cube.position.z;
-                    if(rotType === '+y'){
-                        newx = z === 0? 0 : z;
-                        newz = -x === 0? 0 : -x;
-                    } else {
-                        newx = -z === 0? 0 : -z;
-                        newz = x === 0? 0 : x;
-                    }
-                    cube.position.set(newx, cube.position.y, newz);
-                }
-            break;
-            case "z":
-                if(Math.round(cube.position.z)=== Math.round(group1.children[0].position.z)){
-                    let x = cube.position.x;
-                    let y = cube.position.y;
-                    if(rotType === '+z'){
-                        newx = -y === 0? 0 : -y;
-                        newy = x === 0? 0 : x;
-                    } else {
-                        newx = y === 0? 0 : y;
-                        newy = -x === 0? 0 : -x;
-                    }
-                    cube.position.set(newx, newy, cube.position.z);
-                }
-                break;
-            case "x":
-                if(Math.round(cube.position.x)=== Math.round(group1.children[0].position.x)){
-                    let y = cube.position.y;
-                    let z = cube.position.z;
-                    if(rotType === '+x'){
-                        newy = -z === 0? 0 : -z;
-                        newz = y === 0? 0 : y;
-                    } else {
-                        newy = z === 0? 0 : z;
-                        newz = -y === 0? 0 : -y;
-                    }
-                    cube.position.set(cube.position.x, newy, newz);
-                }
-                break;
-        }
-    });
-    count++;
-    rerenderCube();
-}
-
-function addWallToGroup(type, position) {
-    let x;
-    let y;
-    let z;
-    let group = new THREE.Group();
-    cubes.forEach((cube) => {
-        x = cube.position.x;
-        y = cube.position.y;
-        z = cube.position.z;
-        switch (type) {
-            case "y":
-                if(cube.position.y === position.y){
-                    group.add(cube);
-                }
-                break;
-            case "z":
-                if(cube.position.z === position.z){
-                    group.add(cube);
-                }
-                break;
-            case "x":
-                if(cube.position.x === position.x){
-                    group.add(cube);
-                }
-                break;
-        }
-        cube.position.set(x, y, z);
-    });
-    return group;
-}
-
-function rerenderCube(){
-    if(count === 9){
-        cubes.forEach((cube) => {
-            scene.remove(cube);
-        });
-        count = 0;
-        cubes.forEach((cube) => {
-            if(group1.children.includes(cube)){
-                switch (rotType) {
-                    case "+y":
-                        cube.rotateOnWorldAxis(axisy, Math.PI / 2);
-                        break;
-                    case "+z":
-                        cube.rotateOnWorldAxis(axisz, Math.PI / 2);
-                        break;
-                    case "+x":
-                        cube.rotateOnWorldAxis(axisx, Math.PI / 2);
-                        break;
-                    case "-y":
-                        cube.rotateOnWorldAxis(axis_y, Math.PI / 2);
-                        break;
-                    case "-z":
-                        cube.rotateOnWorldAxis(axis_z, Math.PI / 2);
-                        break;
-                    case "-x":
-                        cube.rotateOnWorldAxis(axis_x, Math.PI / 2);
-                        break;
-                }
-            }
-            scene.add(cube);
-        });
-        scene.remove(group1);
-    }
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-    controls.update();
-}
-
 const delay = async (ms = 1000) =>
-  new Promise(resolve => setTimeout(resolve, ms))
+    new Promise(resolve => setTimeout(resolve, ms))
+class Cube {
+    constructor(size) {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x19d7f8);
+        this.loader = new THREE.TextureLoader();
+        this.geometry = new THREE.BoxGeometry(1, 1, 1);
+        this.materialArray = [
+            new THREE.MeshStandardMaterial({ map: this.loader.load("img/red.png") }),
+            new THREE.MeshStandardMaterial({ map: this.loader.load("img/orange.png") }),
+            new THREE.MeshStandardMaterial({ map: this.loader.load("img/white.png") }),
+            new THREE.MeshStandardMaterial({ map: this.loader.load("img/yellow.png") }),
+            new THREE.MeshStandardMaterial({ map: this.loader.load("img/blue.png") }),
+            new THREE.MeshStandardMaterial({ map: this.loader.load("img/green.png") }),
+        ];
+        this.cubes = new Array();
+        this.group1;
+        this.light;
+        this.directionalLight;
+        this.camera;
+        this.renderer;
+        this.mainSound;
+        this.count = 0;
+        this.controls;
+        this.pointer = new THREE.Vector2();
+        this.raycaster = new THREE.Raycaster();
+        this.clickedPosition;
+        this.cubeSound = new Audio();
+        this.rotType;
+        this.rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"];
+        this.axisy = new THREE.Vector3(0, 1, 0);//y
+        this.axisz = new THREE.Vector3(0, 0, 1);//z
+        this.axisx = new THREE.Vector3(1, 0, 0);//x
+        this.axis_y = new THREE.Vector3(0, -1, 0);//-y
+        this.axis_z = new THREE.Vector3(0, 0, -1);//-z
+        this.axis_x = new THREE.Vector3(-1, 0, 0);//-x
+        this.moves = new Array();
+        this.move = {};
+        this.cubeSize = 3; //Wymiar kostki
+        this.shuffleIterations = 10; //Ilość przetasowań
+        this.delayTime = 150 * this.cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
+        this.init(size);
 
-function getRandomSym(size){
-    let random = Math.floor((Math.random() * size) - Math.floor(size/2));
-    if(size % 2 != 0) {
-        return random
-    } else {
-        return random + 0.5;
-    }
-}
+        window.addEventListener('resize', function () {
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            this.renderer.setSize(width, height);
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix;
+        });
 
-async function solveCube() {
-        while(moves.length > 0){
-                move = moves.pop();
-                rotType = move.rot;
-                switch (rotType) {
-                    case "-x":
-                        group1 = addWallToGroup("x",move.pos);
-                        rotType = "+x";
-                        scene.add(group1);
-                        count = 0;
-                        window.requestAnimationFrame(xRotate);
+        window.addEventListener("click", (event) => {
+            this.clickedPosition = null;
+            this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+            this.pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+            this.raycaster.setFromCamera(this.pointer, this.camera);
+            const intersects = this.raycaster.intersectObjects(this.scene.children);
+            if (intersects.length > 0) {
+                this.clickedPosition = intersects[0].object.position;
+            }
+        });
+
+        window.addEventListener("keydown", (event) => {
+            if (event.key == "a") {
+                this.moves.forEach(function (entry) {
+                    console.log(entry); // pod klawiszem "a" printuję sobie listę ruchów na konsoli
+                });
+            } else if (event.key == "s") {
+                this.solveCube();
+            } else if (event.key == "d") {
+                this.shuffleCube(this.shuffleIterations);
+            }
+            if (this.clickedPosition != null) {
+                switch (event.key) {
+                    case "x":
+                        this.group1 = this.addWallToGroup("x", this.clickedPosition);
+                        this.rotType = "+x";
+                        this.scene.add(this.group1);
+                        this.count = 0;
+                        window.requestAnimationFrame(() => this.xRotate());
                         break;
-                    case "+x":
-                        group1 = addWallToGroup("x",move.pos);
-                        rotType = "-x";
-                        scene.add(group1);
-                        count = 0;
-                        window.requestAnimationFrame(xRotate);
+                    case "X":
+                        this.group1 = this.addWallToGroup("x", this.clickedPosition);
+                        this.rotType = "-x";
+                        this.scene.add(this.group1);
+                        this.count = 0;
+                        window.requestAnimationFrame(() => this.xRotate());
                         break;
-                    case "-y":
-                        group1 = addWallToGroup("y",move.pos);
-                        rotType = "+y";
-                        scene.add(group1);
-                        count = 0;
-                        window.requestAnimationFrame(yRotate);
+                    case "c":
+                        this.group1 = this.addWallToGroup("y", this.clickedPosition);
+                        this.rotType = "+y";
+                        this.scene.add(this.group1);
+                        this.count = 0;
+                        window.requestAnimationFrame(() => this.yRotate());
                         break;
-                    case "+y":
-                        group1 = addWallToGroup("y",move.pos);
-                        rotType = "-y";
-                        scene.add(group1);
-                        count = 0;
-                        window.requestAnimationFrame(yRotate);
+                    case "C":
+                        this.group1 = this.addWallToGroup("y", this.clickedPosition);
+                        this.rotType = "-y";
+                        this.scene.add(this.group1);
+                        this.count = 0;
+                        window.requestAnimationFrame(() => this.yRotate());
                         break;
-                    case "-z":
-                        group1 = addWallToGroup("z",move.pos);
-                        rotType = "+z";
-                        scene.add(group1);
-                        count = 0;
-                        window.requestAnimationFrame(zRotate);
+                    case "z":
+                        this.group1 = this.addWallToGroup("z", this.clickedPosition);
+                        this.rotType = "+z";
+                        this.scene.add(this.group1);
+                        this.count = 0;
+                        window.requestAnimationFrame(() => this.zRotate());
                         break;
-                    case "+z":
-                        group1 = addWallToGroup("z",move.pos);
-                        rotType = "-z";
-                        scene.add(group1);
-                        count = 0;
-                        window.requestAnimationFrame(zRotate);
+                    case "Z":
+                        this.group1 = this.addWallToGroup("z", this.clickedPosition);
+                        this.rotType = "-z";
+                        this.scene.add(this.group1);
+                        this.count = 0;
+                        window.requestAnimationFrame(() => this.zRotate());
                         break;
                 }
-            await delay(delayTime);
-        }
-}
-
-
-async function shuffleCube(iterations) {
-    let randRot = new String;    
-    for(let i = 0; i < iterations; i++){
-        let randPos = new THREE.Vector3(getRandomSym(cubeSize), getRandomSym(cubeSize), getRandomSym(cubeSize));
-        randRot = rotTypeArr[Math.floor(Math.random() * 5)];
-        group1 = addWallToGroup(randRot.substring(1,2),randPos);
-        rotType = randRot;
-        scene.add(group1);
-        count = 0;
-        switch(randRot){
-            case "+x":
-            case "-x":
-                window.requestAnimationFrame(xRotate);
-                break;
-            case "+y":
-            case "-y":
-                window.requestAnimationFrame(yRotate);
-                break;
-            case "+z":
-            case "-z":
-                window.requestAnimationFrame(zRotate);
-                break;
-        }
-        let posClone = new THREE.Vector3(randPos.x, randPos.y, randPos.z);
-        let rotClone = rotType;
-        moves.push({
-            pos: posClone,
-            rot: rotClone
+                let posClone = new THREE.Vector3(this.clickedPosition.x, this.clickedPosition.y, this.clickedPosition.z);
+                let rotClone = this.rotType;
+                this.moves.push({
+                    pos: posClone,
+                    rot: rotClone
+                });
+                posClone = null;
+                rotClone = null;
+            }
+            this.clickedPosition = null;
         });
-        posClone = null;
-        rotClone = null;
-        await delay(delayTime);
     }
-}
 
-function init(size) {
-    cubeSize = size;
-    generateRubikCube(cubeSize);
-    generateLight();
-    generateCamera();
-    generateRenderer();
-    prepereMusic();
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.update();
-    renderer.render(scene, camera);
-    mainSound.play();
-    animate();
-}
-
-window.addEventListener('resize', function () {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix;
-});
-
-window.addEventListener("click", (event) => {
-    clickedPosition = null;
-    pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-    raycaster.setFromCamera( pointer, camera );
-    const intersects = raycaster.intersectObjects( scene.children );
-    if(intersects.length > 0){
-        clickedPosition = intersects[0].object.position;
+    generateRubikCube(size) {
+        let stardCord = -(size * 0.5 - 0.5);
+        let maxCoordinate = size + stardCord;
+        for (let i = stardCord; i < maxCoordinate; i++) {
+            for (let j = stardCord; j < maxCoordinate; j++) {
+                for (let k = stardCord; k < maxCoordinate; k++) {
+                    const cube = new THREE.Mesh(this.geometry, this.materialArray);
+                    cube.position.set(i, j, k);
+                    this.scene.add(cube);
+                    this.cubes.push(cube);
+                }
+            }
+        }
     }
-});
 
-window.addEventListener("keydown", (event) => {
-    if (event.key == "a")  {
-        moves.forEach(function(entry) {
-        console.log(entry); // pod klawiszem "a" printuję sobie listę ruchów na konsoli
-    });
-    } else if (event.key == "s"){
-        solveCube();
-    } else if (event.key == "d"){
-        shuffleCube(shuffleIterations);
-    }        
-        if(clickedPosition!=null){
-            switch (event.key) {
-                case "x":
-                    group1 = addWallToGroup("x",clickedPosition);
-                    rotType = "+x";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(xRotate);
-                    break;
-                case "X":
-                    group1 = addWallToGroup("x",clickedPosition);
-                    rotType = "-x";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(xRotate);
-                    break;
-                case "c":
-                    group1 = addWallToGroup("y",clickedPosition);
-                    rotType = "+y";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(yRotate);
-                    break;
-                case "C":
-                    group1 = addWallToGroup("y",clickedPosition);
-                    rotType = "-y";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(yRotate);
+    generateLight() {
+        this.light = new THREE.AmbientLight(0xffffff, 0.6);
+        this.light.position.set(10, 20, 0);
+        this.scene.add(this.light);
+
+        this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        this.directionalLight.position.set(10, 20, 0);
+        this.scene.add(this.directionalLight);
+    }
+
+    generateCamera() {
+        this.camera = new THREE.PerspectiveCamera(
+            80,
+            window.innerWidth / window.innerHeight,
+            1,
+            1000
+        );
+        this.setStartCameraPosition();
+    }
+
+    setStartCameraPosition() {
+        let basePosition = this.cubeSize + 1;
+        this.camera.position.set(basePosition, basePosition, basePosition);
+        this.camera.lookAt(0, 0, 0);
+    }
+
+    generateRenderer() {
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(this.renderer.domElement);
+    }
+
+    prepereMusic() {
+        this.mainSound = new Audio();
+        let mainSoundSrc = document.createElement("source");
+        mainSoundSrc.type = "audio/mpeg";
+        mainSoundSrc.src = "audio/audio.mp3";
+        this.mainSound.appendChild(mainSoundSrc);
+        this.mainSound.loop = true;
+
+        let cubeSoundSrc = document.createElement("source");
+        cubeSoundSrc.type = "audio/mpeg";
+        cubeSoundSrc.src = "audio/kostka.mp3";
+        this.cubeSound.appendChild(cubeSoundSrc);
+    }
+
+    xRotate() {
+        setTimeout(() => {
+            if (this.rotType === '+x') {
+                this.group1.rotation.x += Math.PI / 16;
+            }
+            if (this.rotType === '-x') {
+                this.group1.rotation.x -= Math.PI / 16;
+            }
+            this.renderer.render(this.scene, this.camera);
+            this.count++;
+            if (this.count == 4) {
+                this.cubeSound.play();
+            }
+            if (this.count < 8) {
+                window.requestAnimationFrame(() => this.xRotate());
+            } else {
+                this.refreshPositions("x");
+            }
+        }, 30);
+    }
+
+    yRotate() {
+        setTimeout(() => {
+            if (this.rotType === '+y') {
+                this.group1.rotation.y += Math.PI / 16;
+            }
+            if (this.rotType === '-y') {
+                this.group1.rotation.y -= Math.PI / 16;
+            }
+            this.renderer.render(this.scene, this.camera);
+            this.count++;
+            if (this.count == 4) {
+                this.cubeSound.play();
+            }
+            if (this.count < 8) {
+                window.requestAnimationFrame(() => this.yRotate());
+            } else {
+                this.refreshPositions("y");
+            }
+        }, 30);
+    }
+
+    zRotate() {
+        setTimeout(() => {
+            if (this.rotType === '+z') {
+                this.group1.rotation.z += Math.PI / 16;
+            }
+            if (this.rotType === '-z') {
+                this.group1.rotation.z -= Math.PI / 16;
+            }
+            this.renderer.render(this.scene, this.camera);
+            this.count++;
+            if (this.count == 4) {
+                this.cubeSound.play();
+            }
+            if (this.count < 8) {
+                window.requestAnimationFrame(() => this.zRotate());
+            } else {
+                this.refreshPositions("z");
+            }
+        }, 30);
+    }
+
+    refreshPositions(type) {
+        let newx;
+        let newy;
+        let newz;
+        this.cubes.forEach((cube) => {
+            switch (type) {
+                case "y":
+                    if (Math.round(cube.position.y) === Math.round(this.group1.children[0].position.y)) {
+                        let x = cube.position.x;
+                        let z = cube.position.z;
+                        if (this.rotType === '+y') {
+                            newx = z === 0 ? 0 : z;
+                            newz = -x === 0 ? 0 : -x;
+                        } else {
+                            newx = -z === 0 ? 0 : -z;
+                            newz = x === 0 ? 0 : x;
+                        }
+                        cube.position.set(newx, cube.position.y, newz);
+                    }
                     break;
                 case "z":
-                    group1 = addWallToGroup("z",clickedPosition);
-                    rotType = "+z";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(zRotate);
+                    if (Math.round(cube.position.z) === Math.round(this.group1.children[0].position.z)) {
+                        let x = cube.position.x;
+                        let y = cube.position.y;
+                        if (this.rotType === '+z') {
+                            newx = -y === 0 ? 0 : -y;
+                            newy = x === 0 ? 0 : x;
+                        } else {
+                            newx = y === 0 ? 0 : y;
+                            newy = -x === 0 ? 0 : -x;
+                        }
+                        cube.position.set(newx, newy, cube.position.z);
+                    }
                     break;
-                case "Z":
-                    group1 = addWallToGroup("z",clickedPosition);
-                    rotType = "-z";
-                    scene.add(group1);
-                    count = 0;
-                    window.requestAnimationFrame(zRotate);
+                case "x":
+                    if (Math.round(cube.position.x) === Math.round(this.group1.children[0].position.x)) {
+                        let y = cube.position.y;
+                        let z = cube.position.z;
+                        if (this.rotType === '+x') {
+                            newy = -z === 0 ? 0 : -z;
+                            newz = y === 0 ? 0 : y;
+                        } else {
+                            newy = z === 0 ? 0 : z;
+                            newz = -y === 0 ? 0 : -y;
+                        }
+                        cube.position.set(cube.position.x, newy, newz);
+                    }
                     break;
             }
-            let posClone = new THREE.Vector3(clickedPosition.x, clickedPosition.y, clickedPosition.z);
-            let rotClone = rotType;
-            moves.push({
+        });
+        this.count++;
+        this.rerenderCube();
+    }
+
+    addWallToGroup(type, position) {
+        let x;
+        let y;
+        let z;
+        let group = new THREE.Group();
+        this.cubes.forEach((cube) => {
+            x = cube.position.x;
+            y = cube.position.y;
+            z = cube.position.z;
+            switch (type) {
+                case "y":
+                    if (cube.position.y === position.y) {
+                        group.add(cube);
+                    }
+                    break;
+                case "z":
+                    if (cube.position.z === position.z) {
+                        group.add(cube);
+                    }
+                    break;
+                case "x":
+                    if (cube.position.x === position.x) {
+                        group.add(cube);
+                    }
+                    break;
+            }
+            cube.position.set(x, y, z);
+        });
+        return group;
+    }
+
+    rerenderCube() {
+        if (this.count === 9) {
+            this.cubes.forEach((cube) => {
+                this.scene.remove(cube);
+            });
+            this.count = 0;
+            this.cubes.forEach((cube) => {
+                if (this.group1.children.includes(cube)) {
+                    switch (this.rotType) {
+                        case "+y":
+                            cube.rotateOnWorldAxis(this.axisy, Math.PI / 2);
+                            break;
+                        case "+z":
+                            cube.rotateOnWorldAxis(this.axisz, Math.PI / 2);
+                            break;
+                        case "+x":
+                            cube.rotateOnWorldAxis(this.axisx, Math.PI / 2);
+                            break;
+                        case "-y":
+                            cube.rotateOnWorldAxis(this.axis_y, Math.PI / 2);
+                            break;
+                        case "-z":
+                            cube.rotateOnWorldAxis(this.axis_z, Math.PI / 2);
+                            break;
+                        case "-x":
+                            cube.rotateOnWorldAxis(this.axis_x, Math.PI / 2);
+                            break;
+                    }
+                }
+                this.scene.add(cube);
+            });
+            this.scene.remove(this.group1);
+        }
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.renderer.render(this.scene, this.camera);
+        this.controls.update();
+    }
+
+    getRandomSym(size) {
+        let random = Math.floor((Math.random() * size) - Math.floor(size / 2));
+        if (size % 2 != 0) {
+            return random
+        } else {
+            return random + 0.5;
+        }
+    }
+
+    async solveCube() {
+        while (this.moves.length > 0) {
+            this.move = this.moves.pop();
+            this.rotType = this.move.rot;
+            switch (this.rotType) {
+                case "-x":
+                    this.group1 = this.addWallToGroup("x", this.move.pos);
+                    this.rotType = "+x";
+                    this.scene.add(this.group1);
+                    this.count = 0;
+                    window.requestAnimationFrame(() => this.xRotate());
+                    break;
+                case "+x":
+                    this.group1 = this.addWallToGroup("x", this.move.pos);
+                    this.rotType = "-x";
+                    this.scene.add(this.group1);
+                    this.count = 0;
+                    window.requestAnimationFrame(() => this.xRotate());
+                    break;
+                case "-y":
+                    this.group1 = this.addWallToGroup("y", this.move.pos);
+                    this.rotType = "+y";
+                    this.scene.add(this.group1);
+                    this.count = 0;
+                    window.requestAnimationFrame(() => this.yRotate());
+                    break;
+                case "+y":
+                    this.group1 = this.addWallToGroup("y", this.move.pos);
+                    this.rotType = "-y";
+                    this.scene.add(this.group1);
+                    this.count = 0;
+                    window.requestAnimationFrame(() => this.yRotate());
+                    break;
+                case "-z":
+                    this.group1 = this.addWallToGroup("z", this.move.pos);
+                    this.rotType = "+z";
+                    this.scene.add(this.group1);
+                    this.count = 0;
+                    window.requestAnimationFrame(() => this.zRotate());
+                    break;
+                case "+z":
+                    this.group1 = this.addWallToGroup("z", this.move.pos);
+                    this.rotType = "-z";
+                    this.scene.add(this.group1);
+                    this.count = 0;
+                    window.requestAnimationFrame(() => this.zRotate());
+                    break;
+            }
+            await delay(this.delayTime);
+        }
+    }
+
+
+    async shuffleCube(iterations) {
+        let randRot = new String;
+        for (let i = 0; i < iterations; i++) {
+            let randPos = new THREE.Vector3(this.getRandomSym(this.cubeSize), this.getRandomSym(this.cubeSize), this.getRandomSym(this.cubeSize));
+            randRot = this.rotTypeArr[Math.floor(Math.random() * 5)];
+            this.group1 = this.addWallToGroup(randRot.substring(1, 2), randPos);
+            this.rotType = randRot;
+            this.scene.add(this.group1);
+            this.count = 0;
+            switch (randRot) {
+                case "+x":
+                case "-x":
+                    window.requestAnimationFrame(() => this.xRotate());
+                    break;
+                case "+y":
+                case "-y":
+                    window.requestAnimationFrame(() => this.yRotate());
+                    break;
+                case "+z":
+                case "-z":
+                    window.requestAnimationFrame(() => this.zRotate());
+                    break;
+            }
+            let posClone = new THREE.Vector3(randPos.x, randPos.y, randPos.z);
+            let rotClone = this.rotType;
+            this.moves.push({
                 pos: posClone,
                 rot: rotClone
             });
             posClone = null;
             rotClone = null;
+            await delay(this.delayTime);
         }
-    clickedPosition = null; 
-});
+    }
 
-export { init }
-export { setStartCameraPosition }
-export { solveCube }
-export { shuffleCube }
+    init(size) {
+        this.cubeSize = size;
+        this.generateRubikCube(this.cubeSize);
+        this.generateLight();
+        this.generateCamera();
+        this.generateRenderer();
+        this.prepereMusic();
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+        this.mainSound.play();
+        this.animate();
+    }
+}
+
+export { Cube }
