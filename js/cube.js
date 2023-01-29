@@ -40,7 +40,7 @@ const axis_z = new THREE.Vector3(0, 0, -1);//-z
 const axis_x = new THREE.Vector3(-1, 0, 0);//-x
 let moves = new Array();
 let move = {};
-let cubeSize = 6; //Wymiar kostki
+let cubeSize = 3; //Wymiar kostki
 let shuffleIterations = 10; //Ilość przetasowań
 let delayTime = 150 * cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
 
@@ -80,7 +80,8 @@ function generateCamera() {
 }
 
 function setStartCameraPosition() {
-    camera.position.set(4, 4, 4);
+    let basePosition = cubeSize + 1;
+    camera.position.set(basePosition, basePosition, basePosition);
     camera.lookAt(0, 0, 0);
 }
 
@@ -394,7 +395,8 @@ async function shuffleCube(iterations) {
     }
 }
 
-function init() {
+function init(size) {
+    cubeSize = size;
     generateRubikCube(cubeSize);
     generateLight();
     generateCamera();
@@ -425,7 +427,6 @@ window.addEventListener("click", (event) => {
     if(intersects.length > 0){
         clickedPosition = intersects[0].object.position;
     }
-    console.log(clickedPosition);
 });
 
 window.addEventListener("keydown", (event) => {
@@ -497,3 +498,5 @@ window.addEventListener("keydown", (event) => {
 
 export { init }
 export { setStartCameraPosition }
+export { solveCube }
+export { shuffleCube }
