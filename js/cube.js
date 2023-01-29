@@ -40,7 +40,9 @@ const axis_z = new THREE.Vector3(0, 0, -1);//-z
 const axis_x = new THREE.Vector3(-1, 0, 0);//-x
 let moves = new Array();
 let move = {};
-let animating = false;
+let cubeSize = 6; //Wymiar kostki
+let shuffleIterations = 10; //Ilość przetasowań
+let delayTime = 150 * cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
 
 function generateRubikCube(size) {
     let stardCord = -(size * 0.5 - 0.5);
@@ -104,8 +106,6 @@ function prepereMusic() {
 }
 
 function xRotate() {
-    // if(!animating){
-        // animating = true;
         setTimeout(() => {
             if(rotType === '+x'){
                 group1.rotation.x += Math.PI / 16;
@@ -124,14 +124,9 @@ function xRotate() {
                 refreshPositions("x");
             }
         }, 30);
-    // } else {
-        // setTimeout(zRotate,1000);
-    // }
 }
 
 function yRotate() {
-    // if(!animating){
-        // animating = true;
         setTimeout(() => {
             if(rotType === '+y'){
                 group1.rotation.y += Math.PI / 16;
@@ -150,14 +145,9 @@ function yRotate() {
                 refreshPositions("y");
             }
         }, 30);
-    // } else {
-        // setTimeout(zRotate,1000);
-    // }
 }
 
 function zRotate() {
-    // if(!animating){
-        // animating = true;
         setTimeout(() => {
             if( rotType === '+z'){
                 group1.rotation.z += Math.PI / 16;
@@ -176,9 +166,6 @@ function zRotate() {
                 refreshPositions("z");
             }
         }, 30);
-    // } else {
-        // setTimeout(zRotate,1000);
-    // }
 }
 
 function refreshPositions(type){
@@ -188,8 +175,6 @@ function refreshPositions(type){
     cubes.forEach((cube) => {
         switch (type) {
             case "y":
-                // console.log("refreshPositions(y)"); //DEBUG
-                // console.log(group1); //DEBUG Kto porwał dzieci???
                 if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y)){
                     let x = cube.position.x;
                     let z = cube.position.z;
@@ -204,8 +189,6 @@ function refreshPositions(type){
                 }
             break;
             case "z":
-                // console.log("refreshPositions(z)"); //DEBUG
-                // console.log(group1); //DEBUG Kto porwał dzieci???
                 if(Math.round(cube.position.z)=== Math.round(group1.children[0].position.z)){
                     let x = cube.position.x;
                     let y = cube.position.y;
@@ -220,8 +203,6 @@ function refreshPositions(type){
                 }
                 break;
             case "x":
-                // console.log("refreshPositions(x)"); //DEBUG
-                // console.log(group1); //DEBUG Kto porwał dzieci???
                 if(Math.round(cube.position.x)=== Math.round(group1.children[0].position.x)){
                     let y = cube.position.y;
                     let z = cube.position.z;
@@ -304,7 +285,6 @@ function rerenderCube(){
             scene.add(cube);
         });
         scene.remove(group1);
-        animating = false;
     }
 }
 
@@ -314,14 +294,24 @@ function animate() {
     controls.update();
 }
 
-function solveCube() {
-        moves.forEach(() => {
-            if (count == 0){
+const delay = async (ms = 1000) =>
+  new Promise(resolve => setTimeout(resolve, ms))
+
+function getRandomSym(size){
+    let random = Math.floor((Math.random() * size) - Math.floor(size/2));
+    if(size % 2 != 0) {
+        return random
+    } else {
+        return random + 0.5;
+    }
+}
+
+async function solveCube() {
+        while(moves.length > 0){
                 move = moves.pop();
                 rotType = move.rot;
-                console.log(move.pos, rotType); //DEBUG zmienne po przypisaniu ze stacka; Wywala Uncaught TypeError: group1.children[0] is undefined, ale nie na każdym kroku
-                switch (rotType) {                       //Ma problem z refreshPositions() na tych linijkach if(Math.round(cube.position.y)=== Math.round(group1.children[0].position.y))
-                    case "-x":                  //Jakiś asynchroniczny bulszit - wykminić jak blokować animację do skończenia poprzedniej
+                switch (rotType) {
+                    case "-x":
                         group1 = addWallToGroup("x",move.pos);
                         rotType = "+x";
                         scene.add(group1);
@@ -364,32 +354,48 @@ function solveCube() {
                         window.requestAnimationFrame(zRotate);
                         break;
                 }
-            }
-        });
+            await delay(delayTime);
+        }
 }
 
-function shuffleCube(iterations) {
-    let randPos = new THREE.Vector3();
+
+async function shuffleCube(iterations) {
     let randRot = new String;    
     for(let i = 0; i < iterations; i++){
-        randPos.x = Math.floor((Math.random() * 3)-1);
-        randPos.y = Math.floor((Math.random() * 3)-1);
-        randPos.z = Math.floor((Math.random() * 3)-1);
+        let randPos = new THREE.Vector3(getRandomSym(cubeSize), getRandomSym(cubeSize), getRandomSym(cubeSize));
         randRot = rotTypeArr[Math.floor(Math.random() * 5)];
-        console.log(randPos,randRot); //DEBUG podglądam wylosowane wartsci
-        setTimeout(() => {
-            group1 = addWallToGroup(randRot.substring(1,1),randPos);
-            rotType = randRot;
-            scene.add(group1);
-            count = 0;
-            window.requestAnimationFrame(xRotate);
-        }, 500);
+        group1 = addWallToGroup(randRot.substring(1,2),randPos);
+        rotType = randRot;
+        scene.add(group1);
+        count = 0;
+        switch(randRot){
+            case "+x":
+            case "-x":
+                window.requestAnimationFrame(xRotate);
+                break;
+            case "+y":
+            case "-y":
+                window.requestAnimationFrame(yRotate);
+                break;
+            case "+z":
+            case "-z":
+                window.requestAnimationFrame(zRotate);
+                break;
+        }
+        let posClone = new THREE.Vector3(randPos.x, randPos.y, randPos.z);
+        let rotClone = rotType;
+        moves.push({
+            pos: posClone,
+            rot: rotClone
+        });
+        posClone = null;
+        rotClone = null;
+        await delay(delayTime);
     }
-
 }
 
 function init() {
-    generateRubikCube(3);
+    generateRubikCube(cubeSize);
     generateLight();
     generateCamera();
     generateRenderer();
@@ -423,17 +429,14 @@ window.addEventListener("click", (event) => {
 });
 
 window.addEventListener("keydown", (event) => {
-    //DEBUG keypress 'a' loguje mi cały array moves
-    let posClone = new THREE.Vector3;
-    var rotClone = new String;
     if (event.key == "a")  {
         moves.forEach(function(entry) {
-        console.log(entry);
+        console.log(entry); // pod klawiszem "a" printuję sobie listę ruchów na konsoli
     });
     } else if (event.key == "s"){
         solveCube();
     } else if (event.key == "d"){
-        shuffleCube(5);
+        shuffleCube(shuffleIterations);
     }        
         if(clickedPosition!=null){
             switch (event.key) {
@@ -480,9 +483,8 @@ window.addEventListener("keydown", (event) => {
                     window.requestAnimationFrame(zRotate);
                     break;
             }
-            // console.log(group1); //DEBUG group1 po każdym ruchu
-            posClone = clickedPosition;
-            rotClone = rotType;
+            let posClone = new THREE.Vector3(clickedPosition.x, clickedPosition.y, clickedPosition.z);
+            let rotClone = rotType;
             moves.push({
                 pos: posClone,
                 rot: rotClone
