@@ -1,4 +1,8 @@
+import * as THREE from "../node_modules/three/build/three.module.js";
 import { Cube } from './Cube.js';
+import { Music } from "./Music.js";
+import { Camera } from "./Camera.js";
+import { Light } from "./Light.js";
 
 let cube;
 
@@ -8,11 +12,17 @@ function start() {
         let error = document.getElementsByClassName("error");
         error[0].classList.remove("hidden");
     } else{
-        cube = new Cube(size);
+        let cubeSound = new Music("audio/mpeg", "audio/kostka.mp3", false);
+        let camera = new Camera();
+        let ambientLight = new Light(true);
+        let directionalLight = new Light(false);
+        cube = new Cube(size, cubeSound, camera, ambientLight, directionalLight);
         let initForm = document.getElementById("initForm");
         initForm.classList.add("hidden");
         let initButton = document.getElementById("initButton");
         initButton.classList.add("hidden");
+        let mainSound = new Music("audio/mpeg", "audio/audio.mp3", true);
+        mainSound.play();
     }
     
 }

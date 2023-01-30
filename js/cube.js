@@ -1,10 +1,11 @@
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
+import { Renderer } from "./Renderer.js";
 
 const delay = async (ms = 1000) =>
     new Promise(resolve => setTimeout(resolve, ms))
 class Cube {
-    constructor(size) {
+    constructor(size, cubeSound, camera, ambientLight, directionalLight) {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x19d7f8);
         this.loader = new THREE.TextureLoader();
@@ -19,17 +20,16 @@ class Cube {
         ];
         this.cubes = new Array();
         this.group1;
-        this.light;
-        this.directionalLight;
-        this.camera;
-        this.renderer;
-        this.mainSound;
+        this.ambientLight = ambientLight;
+        this.directionalLight = directionalLight;
+        this.mainCamera = camera;
+        this.renderer = new Renderer();
         this.count = 0;
         this.controls;
         this.pointer = new THREE.Vector2();
         this.raycaster = new THREE.Raycaster();
         this.clickedPosition;
-        this.cubeSound = new Audio();
+        this.cubeSound = cubeSound;
         this.rotType;
         this.rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"];
         this.axisy = new THREE.Vector3(0, 1, 0);//y
@@ -49,8 +49,8 @@ class Cube {
             let width = window.innerWidth;
             let height = window.innerHeight;
             this.renderer.setSize(width, height);
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix;
+            this.mainCamera.getCamera().aspect = width / height;
+            this.mainCamera.getCamera().updateProjectionMatrix;
         });
 
         window.addEventListener("click", (event) => {
@@ -58,7 +58,7 @@ class Cube {
             this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
             this.pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-            this.raycaster.setFromCamera(this.pointer, this.camera);
+            this.raycaster.setFromCamera(this.pointer, this.mainCamera.getCamera());
             const intersects = this.raycaster.intersectObjects(this.scene.children);
             if (intersects.length > 0) {
                 this.clickedPosition = intersects[0].object.position;
@@ -148,53 +148,6 @@ class Cube {
         }
     }
 
-    generateLight() {
-        this.light = new THREE.AmbientLight(0xffffff, 0.6);
-        this.light.position.set(10, 20, 0);
-        this.scene.add(this.light);
-
-        this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        this.directionalLight.position.set(10, 20, 0);
-        this.scene.add(this.directionalLight);
-    }
-
-    generateCamera() {
-        this.camera = new THREE.PerspectiveCamera(
-            80,
-            window.innerWidth / window.innerHeight,
-            1,
-            1000
-        );
-        this.setStartCameraPosition();
-    }
-
-    setStartCameraPosition() {
-        let basePosition = this.cubeSize + 1;
-        this.camera.position.set(basePosition, basePosition, basePosition);
-        this.camera.lookAt(0, 0, 0);
-    }
-
-    generateRenderer() {
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(this.renderer.domElement);
-    }
-
-    prepereMusic() {
-        this.mainSound = new Audio();
-        let mainSoundSrc = document.createElement("source");
-        mainSoundSrc.type = "audio/mpeg";
-        mainSoundSrc.src = "audio/audio.mp3";
-        this.mainSound.appendChild(mainSoundSrc);
-        this.mainSound.loop = true;
-
-        let cubeSoundSrc = document.createElement("source");
-        cubeSoundSrc.type = "audio/mpeg";
-        cubeSoundSrc.src = "audio/kostka.mp3";
-        this.cubeSound.appendChild(cubeSoundSrc);
-    }
-
     xRotate() {
         setTimeout(() => {
             if (this.rotType === '+x') {
@@ -203,7 +156,7 @@ class Cube {
             if (this.rotType === '-x') {
                 this.group1.rotation.x -= Math.PI / 16;
             }
-            this.renderer.render(this.scene, this.camera);
+            this.renderer.render(this.scene, this.mainCamera.getCamera());
             this.count++;
             if (this.count == 4) {
                 this.cubeSound.play();
@@ -224,7 +177,7 @@ class Cube {
             if (this.rotType === '-y') {
                 this.group1.rotation.y -= Math.PI / 16;
             }
-            this.renderer.render(this.scene, this.camera);
+            this.renderer.render(this.scene, this.mainCamera.getCamera());
             this.count++;
             if (this.count == 4) {
                 this.cubeSound.play();
@@ -245,7 +198,7 @@ class Cube {
             if (this.rotType === '-z') {
                 this.group1.rotation.z -= Math.PI / 16;
             }
-            this.renderer.render(this.scene, this.camera);
+            this.renderer.render(this.scene, this.mainCamera.getCamera());
             this.count++;
             if (this.count == 4) {
                 this.cubeSound.play();
@@ -380,7 +333,7 @@ class Cube {
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, this.mainCamera.getCamera());
         this.controls.update();
     }
 
@@ -445,7 +398,6 @@ class Cube {
         }
     }
 
-
     async shuffleCube(iterations) {
         let randRot = new String;
         for (let i = 0; i < iterations; i++) {
@@ -484,14 +436,12 @@ class Cube {
     init(size) {
         this.cubeSize = size;
         this.generateRubikCube(this.cubeSize);
-        this.generateLight();
-        this.generateCamera();
-        this.generateRenderer();
-        this.prepereMusic();
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.ambientLight.addToScene(this.scene);
+        this.directionalLight.addToScene(this.scene);
+        this.mainCamera.setStartCameraPosition(this.cubeSize);
+        this.controls = new OrbitControls(this.mainCamera.getCamera(), this.renderer.domElement);
         this.controls.update();
-        this.renderer.render(this.scene, this.camera);
-        this.mainSound.play();
+        this.renderer.render(this.scene, this.mainCamera.getCamera());
         this.animate();
     }
 }
