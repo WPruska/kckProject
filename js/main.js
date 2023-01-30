@@ -14,8 +14,8 @@ let cubeSound = new Sound("audio/mpeg", "audio/kostka.mp3", false); // Dźwięk 
 let mainSound = new Sound("audio/mpeg", "audio/audio.mp3", true); // Dźwięk głównej muzyki z tła, ustawiony na zapętlenie zapętlony.
 let camera = new Camera(); // Kamera którą obracamy.
 let renderer = new Renderer(); // Render który wyświetla scenę
-const ambientLight = new Light(true); // Jeden z rodzajów oświetlenia sceny.
-const directionalLight = new Light(false); // Drugi tym światła używany na scenie.
+const ambientLight = new Light(true, 0xffffff, 0.6); // Jeden z rodzajów oświetlenia sceny.
+const directionalLight = new Light(false, 0xffffff, 0.4); // Drugi tym światła używany na scenie.
 
 /**
  * @description Funkcja która jest uruchamiana po wciśnięciu przycisku "start" na scenie inicjalizującej, po wprowadzeniu prawidłowych danych. 
@@ -29,6 +29,8 @@ function start() {
         error[0].classList.remove("hidden");
     } else {
         scene.background = new THREE.Color(0x19d7f8);
+        ambientLight.setPosiotion(10, 20, 0);
+        directionalLight.setPosiotion(10, 20, 0);
         ambientLight.addToScene(scene);
         directionalLight.addToScene(scene);
         cube = new Cube(scene, size, cubeSound, camera, renderer);
