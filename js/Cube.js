@@ -30,7 +30,7 @@ class Cube {
         this.moves = new Array();
         this.move = {};
         this.cubeSize = 3; //Wymiar kostki
-        this.delayTime = 150 * this.cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
+        this.delayTime = 250 * this.cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
         this.init(size);
 
         window.addEventListener('resize', function () {
