@@ -1,5 +1,5 @@
 /**
- * @description klasa przechowująca strukturę kostki rubika
+ * @description Klasa przechowująca strukturę kostki rubika
  */
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
@@ -35,14 +35,6 @@ class Cube {
         this.cubeSize = 3; //Wymiar kostki
         this.delayTime = 250 * this.cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
         this.init(size);
-
-        window.addEventListener('resize', function () {
-            let width = window.innerWidth;
-            let height = window.innerHeight;
-            this.renderer.setSize(width, height);
-            this.mainCamera.getCamera().aspect = width / height;
-            this.mainCamera.getCamera().updateProjectionMatrix;
-        });
 
         window.addEventListener("click", (event) => {
             this.clickedPosition = null;

@@ -1,5 +1,5 @@
 /**
- * @description głowny plik js, który inicjalizuje aplikacje po określeniu rozmiaru kostki.
+ * @description Głowny plik js, który inicjalizuje aplikacje po określeniu rozmiaru kostki.
  */
 import * as THREE from "../node_modules/three/build/three.module.js";
 import { Cube } from './Cube.js';
@@ -8,26 +8,26 @@ import { Camera } from "./Camera.js";
 import { Renderer } from "./Renderer.js";
 import { Light } from "./Light.js";
 
-let cube; // zmienna która przechowuje dane o kostce Rubika.
-let scene = new THREE.Scene(); // scena która wyświetla kostę wraz z kamerę, światłem i pozostałymi danymi.
-let cubeSound = new Sound("audio/mpeg", "audio/kostka.mp3", false); // dźwięk obrotu kostki.
-let mainSound = new Sound("audio/mpeg", "audio/audio.mp3", true); // dźwięk głównej muzyki z tła, ustawiony na zapętlenie zapętlony.
-let camera = new Camera(); // kamera którą obracamy.
-let renderer = new Renderer(); // zmienna która określa co ma być wyświetlone na scenie.
-const ambientLight = new Light(true); // jeden z rodzajów oświetlenia sceny.
-const directionalLight = new Light(false); // drugi tym światła używany na scenie.
+let cube; // Zmienna która przechowuje dane o kostce Rubika.
+let scene = new THREE.Scene(); // Scena która wyświetla kostę wraz z kamerę, światłem i pozostałymi danymi.
+let cubeSound = new Sound("audio/mpeg", "audio/kostka.mp3", false); // Dźwięk obrotu kostki.
+let mainSound = new Sound("audio/mpeg", "audio/audio.mp3", true); // Dźwięk głównej muzyki z tła, ustawiony na zapętlenie zapętlony.
+let camera = new Camera(); // Kamera którą obracamy.
+let renderer = new Renderer(); // Render który wyświetla scenę
+const ambientLight = new Light(true); // Jeden z rodzajów oświetlenia sceny.
+const directionalLight = new Light(false); // Drugi tym światła używany na scenie.
 
 /**
- * @description funkcja która jest uruchamiana po wciśnięciu przycisku "start" na scenie inicjalizującej, po wprowadzeniu prawidłowych danych. 
+ * @description Funkcja która jest uruchamiana po wciśnięciu przycisku "start" na scenie inicjalizującej, po wprowadzeniu prawidłowych danych. 
  * Generuje scene z kostką do układania.
  */
 function start() {
     let size = Number(document.getElementById("howBig").value);
-    //weryfikacja poprawnego wypełnienia pola jeżeli złe wyświetl błąd
-    if(size === null || size === '' || size <= 0){
+    //Weryfikacja poprawnego wypełnienia pola jeżeli złe wyświetl błąd
+    if (size === null || size === '' || size <= 0) {
         let error = document.getElementsByClassName("error");
         error[0].classList.remove("hidden");
-    } else{
+    } else {
         scene.background = new THREE.Color(0x19d7f8);
         ambientLight.addToScene(scene);
         directionalLight.addToScene(scene);
@@ -40,32 +40,43 @@ function start() {
         functionalitiesDiv.classList.remove("hidden");
         mainSound.play();
     }
-    
+
 }
 
 /**
- * @description funkcja która resetuje układ kamery do pozycji początkowej
+ * @description Funkcja która resetuje układ kamery do pozycji początkowej
  */
 function resetView() {
     camera.setStartCameraPosition(cube.cubeSize);
 }
 
 /**
- * @description funcja która powoduje wykonanie 10 ruchów mieszania kostki 
+ * @description Funcja która powoduje wykonanie 10 ruchów mieszania kostki 
  */
 function shuffleCube() {
     cube.shuffleCube(10);
 }
 
 /**
- * @description funkcja wywołuje algorytm układania kostki
+ * @description Funkcja wywołuje algorytm układania kostki
  */
 function solveCube() {
     cube.solveCube();
 }
 
-//przypisanie funkcji do przycisków
+//Przypisanie funkcji do przycisków
 document.getElementById("initButton").addEventListener('click', start);
 document.getElementById("restView").addEventListener('click', resetView);
 document.getElementById("shuffleCube").addEventListener('click', shuffleCube);
 document.getElementById("solveCube").addEventListener('click', solveCube);
+
+/**
+ * @description Event umożliwający przybliżanie i oddalanie się kamery
+ */
+window.addEventListener('resize', function () {
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.getCamera().aspect = width / height;
+    camera.getCamera().updateProjectionMatrix;
+});
