@@ -1,5 +1,27 @@
 body {
     margin: 0;
+    background-color: #414141;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: white;
+}
+h1{
+    font-weight: 800;
+    text-align: center;
+    font-size: 72px;
+}
+button{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: white;
+    background-color: darkcyan;
+    border: 0px;
+    font-size: 20px;
+    font-weight: 800;
+    padding: 10px 40px;
+}
+
+button:hover{
+    background-color: rgb(32, 202, 202);
+    cursor: pointer;
 }
 
 .hidden {
@@ -23,16 +45,29 @@ body {
     position: fixed;
     top: 54%;
     left: 50%;
+    width: 300px;
+    height: 40px;
     transform: translate(-50%, -50%);
+    font-size: 25px;
+    padding: 0;
+}
+
+#initButton:hover{
+    background-color: rgb(32, 202, 202);
+    width: 310px;
+    height: 45px;
+    cursor: pointer;
 }
 
 #functionalitiesDiv {
     position: absolute;
-    top: 0%;
-    left: 85%;
-    width: 10rem;
-    height: 10rem;
+    text-align: center;
+    width: 100vw;
+    height: 5vh;
     padding-top: 0.5rem;
     padding-left: 0.5rem;
-    background-color: blueviolet;
+}
+
+#restView, #shuffleCube, #solveCube{
+    display: inline-block;
 }

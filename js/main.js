@@ -28,7 +28,7 @@ function start() {
         let error = document.getElementsByClassName("error");
         error[0].classList.remove("hidden");
     } else {
-        scene.background = new THREE.Color(0x19d7f8);
+        scene.background = new THREE.Color(0x414141);
         ambientLight.setPosiotion(10, 20, 0);
         directionalLight.setPosiotion(10, 20, 0);
         ambientLight.addToScene(scene);
