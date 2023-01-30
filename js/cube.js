@@ -1,13 +1,11 @@
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
-import { Renderer } from "./Renderer.js";
 
 const delay = async (ms = 1000) =>
     new Promise(resolve => setTimeout(resolve, ms))
 class Cube {
-    constructor(size, cubeSound, camera, ambientLight, directionalLight) {
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x19d7f8);
+    constructor(scene, size, cubeSound, camera, renderer) {
+        this.scene = scene;
         this.loader = new THREE.TextureLoader();
         this.geometry = new THREE.BoxGeometry(1, 1, 1);
         this.materialArray = [
@@ -20,10 +18,8 @@ class Cube {
         ];
         this.cubes = new Array();
         this.group1;
-        this.ambientLight = ambientLight;
-        this.directionalLight = directionalLight;
         this.mainCamera = camera;
-        this.renderer = new Renderer();
+        this.renderer = renderer;
         this.count = 0;
         this.controls;
         this.pointer = new THREE.Vector2();
@@ -31,17 +27,9 @@ class Cube {
         this.clickedPosition;
         this.cubeSound = cubeSound;
         this.rotType;
-        this.rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"];
-        this.axisy = new THREE.Vector3(0, 1, 0);//y
-        this.axisz = new THREE.Vector3(0, 0, 1);//z
-        this.axisx = new THREE.Vector3(1, 0, 0);//x
-        this.axis_y = new THREE.Vector3(0, -1, 0);//-y
-        this.axis_z = new THREE.Vector3(0, 0, -1);//-z
-        this.axis_x = new THREE.Vector3(-1, 0, 0);//-x
         this.moves = new Array();
         this.move = {};
         this.cubeSize = 3; //Wymiar kostki
-        this.shuffleIterations = 10; //Ilość przetasowań
         this.delayTime = 150 * this.cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
         this.init(size);
 
@@ -73,51 +61,27 @@ class Cube {
             } else if (event.key == "s") {
                 this.solveCube();
             } else if (event.key == "d") {
-                this.shuffleCube(this.shuffleIterations);
+                this.shuffleCube(Cube.shuffleIterations);
             }
             if (this.clickedPosition != null) {
                 switch (event.key) {
                     case "x":
-                        this.group1 = this.addWallToGroup("x", this.clickedPosition);
-                        this.rotType = "+x";
-                        this.scene.add(this.group1);
-                        this.count = 0;
-                        window.requestAnimationFrame(() => this.xRotate());
+                        this.requestSolveMove("x", "+x", this.clickedPosition);
                         break;
                     case "X":
-                        this.group1 = this.addWallToGroup("x", this.clickedPosition);
-                        this.rotType = "-x";
-                        this.scene.add(this.group1);
-                        this.count = 0;
-                        window.requestAnimationFrame(() => this.xRotate());
+                        this.requestSolveMove("x", "-x", this.clickedPosition);
                         break;
                     case "c":
-                        this.group1 = this.addWallToGroup("y", this.clickedPosition);
-                        this.rotType = "+y";
-                        this.scene.add(this.group1);
-                        this.count = 0;
-                        window.requestAnimationFrame(() => this.yRotate());
+                        this.requestSolveMove("y", "+y", this.clickedPosition);
                         break;
                     case "C":
-                        this.group1 = this.addWallToGroup("y", this.clickedPosition);
-                        this.rotType = "-y";
-                        this.scene.add(this.group1);
-                        this.count = 0;
-                        window.requestAnimationFrame(() => this.yRotate());
+                        this.requestSolveMove("y", "-y", this.clickedPosition);
                         break;
                     case "z":
-                        this.group1 = this.addWallToGroup("z", this.clickedPosition);
-                        this.rotType = "+z";
-                        this.scene.add(this.group1);
-                        this.count = 0;
-                        window.requestAnimationFrame(() => this.zRotate());
+                        this.requestSolveMove("z", "+z", this.clickedPosition);
                         break;
                     case "Z":
-                        this.group1 = this.addWallToGroup("z", this.clickedPosition);
-                        this.rotType = "-z";
-                        this.scene.add(this.group1);
-                        this.count = 0;
-                        window.requestAnimationFrame(() => this.zRotate());
+                        this.requestSolveMove("z", "-z", this.clickedPosition);
                         break;
                 }
                 let posClone = new THREE.Vector3(this.clickedPosition.x, this.clickedPosition.y, this.clickedPosition.z);
@@ -131,6 +95,24 @@ class Cube {
             }
             this.clickedPosition = null;
         });
+    }
+    static shuffleIterations = 10; //Ilość przetasowań
+    static rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"]; //typy obrotów osi
+    static axisy = new THREE.Vector3(0, 1, 0);//y
+    static axisz = new THREE.Vector3(0, 0, 1);//z
+    static axisx = new THREE.Vector3(1, 0, 0);//x
+    static axis_y = new THREE.Vector3(0, -1, 0);//-y
+    static axis_z = new THREE.Vector3(0, 0, -1);//-z
+    static axis_x = new THREE.Vector3(-1, 0, 0);//-x
+
+    init(size) {
+        this.cubeSize = size;
+        this.generateRubikCube(this.cubeSize);
+        this.mainCamera.setStartCameraPosition(this.cubeSize);
+        this.controls = new OrbitControls(this.mainCamera.getCamera(), this.renderer.domElement);
+        this.controls.update();
+        this.renderer.render(this.scene, this.mainCamera.getCamera());
+        this.animate();
     }
 
     generateRubikCube(size) {
@@ -148,67 +130,10 @@ class Cube {
         }
     }
 
-    xRotate() {
-        setTimeout(() => {
-            if (this.rotType === '+x') {
-                this.group1.rotation.x += Math.PI / 16;
-            }
-            if (this.rotType === '-x') {
-                this.group1.rotation.x -= Math.PI / 16;
-            }
-            this.renderer.render(this.scene, this.mainCamera.getCamera());
-            this.count++;
-            if (this.count == 4) {
-                this.cubeSound.play();
-            }
-            if (this.count < 8) {
-                window.requestAnimationFrame(() => this.xRotate());
-            } else {
-                this.refreshPositions("x");
-            }
-        }, 30);
-    }
-
-    yRotate() {
-        setTimeout(() => {
-            if (this.rotType === '+y') {
-                this.group1.rotation.y += Math.PI / 16;
-            }
-            if (this.rotType === '-y') {
-                this.group1.rotation.y -= Math.PI / 16;
-            }
-            this.renderer.render(this.scene, this.mainCamera.getCamera());
-            this.count++;
-            if (this.count == 4) {
-                this.cubeSound.play();
-            }
-            if (this.count < 8) {
-                window.requestAnimationFrame(() => this.yRotate());
-            } else {
-                this.refreshPositions("y");
-            }
-        }, 30);
-    }
-
-    zRotate() {
-        setTimeout(() => {
-            if (this.rotType === '+z') {
-                this.group1.rotation.z += Math.PI / 16;
-            }
-            if (this.rotType === '-z') {
-                this.group1.rotation.z -= Math.PI / 16;
-            }
-            this.renderer.render(this.scene, this.mainCamera.getCamera());
-            this.count++;
-            if (this.count == 4) {
-                this.cubeSound.play();
-            }
-            if (this.count < 8) {
-                window.requestAnimationFrame(() => this.zRotate());
-            } else {
-                this.refreshPositions("z");
-            }
-        }, 30);
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.renderer.render(this.scene, this.mainCamera.getCamera());
+        this.controls.update();
     }
 
     refreshPositions(type) {
@@ -296,6 +221,41 @@ class Cube {
         return group;
     }
 
+    rotate(type) {
+        setTimeout(() => {
+            switch (this.rotType) {
+                case '+x':
+                    this.group1.rotation.x += Math.PI / 16;
+                    break;
+                case '-x':
+                    this.group1.rotation.x -= Math.PI / 16;
+                    break;
+                case '+y':
+                    this.group1.rotation.y += Math.PI / 16;
+                    break;
+                case '-y':
+                    this.group1.rotation.y -= Math.PI / 16;
+                    break;
+                case '+z':
+                    this.group1.rotation.z += Math.PI / 16;
+                    break;
+                case '-z':
+                    this.group1.rotation.z -= Math.PI / 16;
+                    break;
+            }
+            this.renderer.render(this.scene, this.mainCamera.getCamera());
+            this.count++;
+            if (this.count == 4) {
+                this.cubeSound.play();
+            }
+            if (this.count < 8) {
+                window.requestAnimationFrame(() => this.rotate(type));
+            } else {
+                this.refreshPositions(type);
+            }
+        }, 30);
+    }
+
     rerenderCube() {
         if (this.count === 9) {
             this.cubes.forEach((cube) => {
@@ -306,22 +266,22 @@ class Cube {
                 if (this.group1.children.includes(cube)) {
                     switch (this.rotType) {
                         case "+y":
-                            cube.rotateOnWorldAxis(this.axisy, Math.PI / 2);
+                            cube.rotateOnWorldAxis(Cube.axisy, Math.PI / 2);
                             break;
                         case "+z":
-                            cube.rotateOnWorldAxis(this.axisz, Math.PI / 2);
+                            cube.rotateOnWorldAxis(Cube.axisz, Math.PI / 2);
                             break;
                         case "+x":
-                            cube.rotateOnWorldAxis(this.axisx, Math.PI / 2);
+                            cube.rotateOnWorldAxis(Cube.axisx, Math.PI / 2);
                             break;
                         case "-y":
-                            cube.rotateOnWorldAxis(this.axis_y, Math.PI / 2);
+                            cube.rotateOnWorldAxis(Cube.axis_y, Math.PI / 2);
                             break;
                         case "-z":
-                            cube.rotateOnWorldAxis(this.axis_z, Math.PI / 2);
+                            cube.rotateOnWorldAxis(Cube.axis_z, Math.PI / 2);
                             break;
                         case "-x":
-                            cube.rotateOnWorldAxis(this.axis_x, Math.PI / 2);
+                            cube.rotateOnWorldAxis(Cube.axis_x, Math.PI / 2);
                             break;
                     }
                 }
@@ -329,12 +289,6 @@ class Cube {
             });
             this.scene.remove(this.group1);
         }
-    }
-
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        this.renderer.render(this.scene, this.mainCamera.getCamera());
-        this.controls.update();
     }
 
     getRandomSym(size) {
@@ -352,57 +306,41 @@ class Cube {
             this.rotType = this.move.rot;
             switch (this.rotType) {
                 case "-x":
-                    this.group1 = this.addWallToGroup("x", this.move.pos);
-                    this.rotType = "+x";
-                    this.scene.add(this.group1);
-                    this.count = 0;
-                    window.requestAnimationFrame(() => this.xRotate());
+                    this.requestSolveMove("x", "+x", this.move.pos);
                     break;
                 case "+x":
-                    this.group1 = this.addWallToGroup("x", this.move.pos);
-                    this.rotType = "-x";
-                    this.scene.add(this.group1);
-                    this.count = 0;
-                    window.requestAnimationFrame(() => this.xRotate());
+                    this.requestSolveMove("x", "-x", this.move.pos);
                     break;
                 case "-y":
-                    this.group1 = this.addWallToGroup("y", this.move.pos);
-                    this.rotType = "+y";
-                    this.scene.add(this.group1);
-                    this.count = 0;
-                    window.requestAnimationFrame(() => this.yRotate());
+                    this.requestSolveMove("y", "+y", this.move.pos);
                     break;
                 case "+y":
-                    this.group1 = this.addWallToGroup("y", this.move.pos);
-                    this.rotType = "-y";
-                    this.scene.add(this.group1);
-                    this.count = 0;
-                    window.requestAnimationFrame(() => this.yRotate());
+                    this.requestSolveMove("y", "-y", this.move.pos);
                     break;
                 case "-z":
-                    this.group1 = this.addWallToGroup("z", this.move.pos);
-                    this.rotType = "+z";
-                    this.scene.add(this.group1);
-                    this.count = 0;
-                    window.requestAnimationFrame(() => this.zRotate());
+                    this.requestSolveMove("z", "+z", this.move.pos);
                     break;
                 case "+z":
-                    this.group1 = this.addWallToGroup("z", this.move.pos);
-                    this.rotType = "-z";
-                    this.scene.add(this.group1);
-                    this.count = 0;
-                    window.requestAnimationFrame(() => this.zRotate());
+                    this.requestSolveMove("z", "-z", this.move.pos);
                     break;
             }
             await delay(this.delayTime);
         }
     }
 
+    requestSolveMove(axis, axisType, wall) {
+        this.group1 = this.addWallToGroup(axis, wall);
+        this.rotType = axisType;
+        this.scene.add(this.group1);
+        this.count = 0;
+        window.requestAnimationFrame(() => this.rotate(axis));
+    }
+
     async shuffleCube(iterations) {
         let randRot = new String;
         for (let i = 0; i < iterations; i++) {
             let randPos = new THREE.Vector3(this.getRandomSym(this.cubeSize), this.getRandomSym(this.cubeSize), this.getRandomSym(this.cubeSize));
-            randRot = this.rotTypeArr[Math.floor(Math.random() * 5)];
+            randRot = Cube.rotTypeArr[Math.floor(Math.random() * 5)];
             this.group1 = this.addWallToGroup(randRot.substring(1, 2), randPos);
             this.rotType = randRot;
             this.scene.add(this.group1);
@@ -410,15 +348,15 @@ class Cube {
             switch (randRot) {
                 case "+x":
                 case "-x":
-                    window.requestAnimationFrame(() => this.xRotate());
+                    window.requestAnimationFrame(() => this.rotate("x"));
                     break;
                 case "+y":
                 case "-y":
-                    window.requestAnimationFrame(() => this.yRotate());
+                    window.requestAnimationFrame(() => this.rotate("y"));
                     break;
                 case "+z":
                 case "-z":
-                    window.requestAnimationFrame(() => this.zRotate());
+                    window.requestAnimationFrame(() => this.rotate("z"));
                     break;
             }
             let posClone = new THREE.Vector3(randPos.x, randPos.y, randPos.z);
@@ -431,18 +369,6 @@ class Cube {
             rotClone = null;
             await delay(this.delayTime);
         }
-    }
-
-    init(size) {
-        this.cubeSize = size;
-        this.generateRubikCube(this.cubeSize);
-        this.ambientLight.addToScene(this.scene);
-        this.directionalLight.addToScene(this.scene);
-        this.mainCamera.setStartCameraPosition(this.cubeSize);
-        this.controls = new OrbitControls(this.mainCamera.getCamera(), this.renderer.domElement);
-        this.controls.update();
-        this.renderer.render(this.scene, this.mainCamera.getCamera());
-        this.animate();
     }
 }
 

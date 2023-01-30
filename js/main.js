@@ -2,9 +2,16 @@ import * as THREE from "../node_modules/three/build/three.module.js";
 import { Cube } from './Cube.js';
 import { Music } from "./Music.js";
 import { Camera } from "./Camera.js";
+import { Renderer } from "./Renderer.js";
 import { Light } from "./Light.js";
 
 let cube;
+let scene = new THREE.Scene();
+let cubeSound = new Music("audio/mpeg", "audio/kostka.mp3", false);
+let camera = new Camera();
+let renderer = new Renderer();
+const ambientLight = new Light(true);
+const directionalLight = new Light(false);
 
 function start() {
     let size = Number(document.getElementById("howBig").value);
@@ -12,11 +19,10 @@ function start() {
         let error = document.getElementsByClassName("error");
         error[0].classList.remove("hidden");
     } else{
-        let cubeSound = new Music("audio/mpeg", "audio/kostka.mp3", false);
-        let camera = new Camera();
-        let ambientLight = new Light(true);
-        let directionalLight = new Light(false);
-        cube = new Cube(size, cubeSound, camera, ambientLight, directionalLight);
+        scene.background = new THREE.Color(0x19d7f8);
+        ambientLight.addToScene(scene);
+        directionalLight.addToScene(scene);
+        cube = new Cube(scene, size, cubeSound, camera, renderer);
         let initForm = document.getElementById("initForm");
         initForm.classList.add("hidden");
         let initButton = document.getElementById("initButton");
@@ -27,7 +33,7 @@ function start() {
     
 }
 function resetView() {
-    cube.setStartCameraPosition();
+    camera.setStartCameraPosition(cube.cubeSize);
 }
 
 function shuffleCube() {
