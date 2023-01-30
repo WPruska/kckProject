@@ -4,38 +4,52 @@
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
 
+/**
+ * 
+ * @description Opóźnienie które powoduje powodzenie się animacji w płynny sposób i wykonania sygnałów obrotu przy mieszaniu i rozwiązywaniu kostki
+ */
 const delay = async (ms = 1000) =>
     new Promise(resolve => setTimeout(resolve, ms))
 class Cube {
+    /**
+     * @description Konstruktor Kostki Rubika
+     * 
+     * @param scene Scena na które znajduje się kostka
+     * @param size Rozmiar kostki
+     * @param cubeSound Dźwięk używany przy obrocie kostki
+     * @param camera Kamera która jest używa dla kostki
+     * @param renderer Renderer który wyświetla kostkę
+     */
     constructor(scene, size, cubeSound, camera, renderer) {
-        this.scene = scene;
-        this.loader = new THREE.TextureLoader();
-        this.geometry = new THREE.BoxGeometry(1, 1, 1);
+        this.scene = scene;//Scena na której znajduje się kostka
+        this.geometry = new THREE.BoxGeometry(1, 1, 1); //Wielkość pojedyńczej kostki
         this.materialArray = [
-            new THREE.MeshStandardMaterial({ map: this.loader.load("img/red.png") }),
-            new THREE.MeshStandardMaterial({ map: this.loader.load("img/orange.png") }),
-            new THREE.MeshStandardMaterial({ map: this.loader.load("img/white.png") }),
-            new THREE.MeshStandardMaterial({ map: this.loader.load("img/yellow.png") }),
-            new THREE.MeshStandardMaterial({ map: this.loader.load("img/blue.png") }),
-            new THREE.MeshStandardMaterial({ map: this.loader.load("img/green.png") }),
-        ];
-        this.cubes = new Array();
-        this.group1;
-        this.mainCamera = camera;
-        this.renderer = renderer;
-        this.count = 0;
-        this.controls;
-        this.pointer = new THREE.Vector2();
-        this.raycaster = new THREE.Raycaster();
-        this.clickedPosition;
-        this.cubeSound = cubeSound;
-        this.rotType;
-        this.moves = new Array();
-        this.move = {};
+            new THREE.MeshStandardMaterial({ map: Cube.loader.load("img/red.png") }),
+            new THREE.MeshStandardMaterial({ map: Cube.loader.load("img/orange.png") }),
+            new THREE.MeshStandardMaterial({ map: Cube.loader.load("img/white.png") }),
+            new THREE.MeshStandardMaterial({ map: Cube.loader.load("img/yellow.png") }),
+            new THREE.MeshStandardMaterial({ map: Cube.loader.load("img/blue.png") }),
+            new THREE.MeshStandardMaterial({ map: Cube.loader.load("img/green.png") }),
+        ]; //Mapa grafik ścianek kostek
+        this.cubes = new Array(); //Lista przechowująca pojedyńcze kostki Kostki Rubika
+        this.group1; //Grupa przechowująca strukturę elementów potrzebnych do operacji
+        this.mainCamera = camera; //Kamera do której się odwołuje kostka
+        this.renderer = renderer; //Renderer który wyświetla kostkę
+        this.count = 0; //Zmienna służąca do wykonania poprawnie animacji obrotów
+        this.controls; //Kontroler OrbitControls który umożliwa poruszanie kamerą
+        this.pointer = new THREE.Vector2(); //Zmienna przechowująca współrzędne klikniętej kostki Kostki Rubika
+        this.raycaster = new THREE.Raycaster(); //Zmienna pommocna do określenia która kostka została kliknięta
+        this.clickedPosition; //Pozycja klikniętej kostki
+        this.cubeSound = cubeSound; //Dźwięk używany w trakcie animacji obrotu
+        this.rotType; //Zmienna przechowująca typ wykonywanego obrotu
+        this.moves = new Array(); //Lista przechowująca wszystkie wykonane ruchy na kostce
         this.cubeSize = 3; //Wymiar kostki
-        this.delayTime = 250 * this.cubeSize; //delay między ruchami w shuffle i solve w [ms] (lepiej nie ustawiać mniej niż 500, zwłaszcza dla większych kostek)
+        this.delayTime = 250 * this.cubeSize; //Delay między ruchami w shuffle i solve w [ms]
         this.init(size);
 
+        /**
+         * @description Event który przechowuje informacje o klikniętej kostce Kostki Rubika
+         */
         window.addEventListener("click", (event) => {
             this.clickedPosition = null;
             this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -48,35 +62,29 @@ class Cube {
             }
         });
 
+        /**
+         * @description Event, który określa co ma się dziać z kostką przy kliknięciu konkretnego przyciska od rotacji
+         */
         window.addEventListener("keydown", (event) => {
-            if (event.key == "a") {
-                this.moves.forEach(function (entry) {
-                    console.log(entry); // pod klawiszem "a" printuję sobie listę ruchów na konsoli
-                });
-            } else if (event.key == "s") {
-                this.solveCube();
-            } else if (event.key == "d") {
-                this.shuffleCube(Cube.shuffleIterations);
-            }
             if (this.clickedPosition != null) {
                 switch (event.key) {
                     case "x":
-                        this.requestSolveMove("x", "+x", this.clickedPosition);
+                        this.requestMove("x", "+x", this.clickedPosition);
                         break;
                     case "X":
-                        this.requestSolveMove("x", "-x", this.clickedPosition);
+                        this.requestMove("x", "-x", this.clickedPosition);
                         break;
                     case "c":
-                        this.requestSolveMove("y", "+y", this.clickedPosition);
+                        this.requestMove("y", "+y", this.clickedPosition);
                         break;
                     case "C":
-                        this.requestSolveMove("y", "-y", this.clickedPosition);
+                        this.requestMove("y", "-y", this.clickedPosition);
                         break;
                     case "z":
-                        this.requestSolveMove("z", "+z", this.clickedPosition);
+                        this.requestMove("z", "+z", this.clickedPosition);
                         break;
                     case "Z":
-                        this.requestSolveMove("z", "-z", this.clickedPosition);
+                        this.requestMove("z", "-z", this.clickedPosition);
                         break;
                 }
                 let posClone = new THREE.Vector3(this.clickedPosition.x, this.clickedPosition.y, this.clickedPosition.z);
@@ -91,15 +99,21 @@ class Cube {
             this.clickedPosition = null;
         });
     }
+    static loader = new THREE.TextureLoader(); //Zmienna służąca do ładowania textur
     static shuffleIterations = 10; //Ilość przetasowań
-    static rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"]; //typy obrotów osi
-    static axisy = new THREE.Vector3(0, 1, 0);//y
-    static axisz = new THREE.Vector3(0, 0, 1);//z
-    static axisx = new THREE.Vector3(1, 0, 0);//x
-    static axis_y = new THREE.Vector3(0, -1, 0);//-y
-    static axis_z = new THREE.Vector3(0, 0, -1);//-z
-    static axis_x = new THREE.Vector3(-1, 0, 0);//-x
+    static rotTypeArr = ["+x", "-x", "+y", "-y", "+z", "-z"]; //Typy obrotów osi
+    static axisy = new THREE.Vector3(0, 1, 0);//Wektor 3D obrotu na osi Y
+    static axisz = new THREE.Vector3(0, 0, 1);//Wektor 3D obrotu na osi Z
+    static axisx = new THREE.Vector3(1, 0, 0);//Wektor 3D obrotu na osi X
+    static axis_y = new THREE.Vector3(0, -1, 0);//Wektor 3D obrotu przeciwnie do osi Y
+    static axis_z = new THREE.Vector3(0, 0, -1);//Wektor 3D obrotu przeciwnie do osi Z
+    static axis_x = new THREE.Vector3(-1, 0, 0);//Wektor 3D obrotu przeciwnie do osi X
 
+    /**
+     * @description Funkcja inicjalizująca kostkę, wraz z Kontrolerem kamery
+     * 
+     * @param size Rozmiar kostki, która zostanie wygenerowana
+     */
     init(size) {
         this.cubeSize = size;
         this.generateRubikCube(this.cubeSize);
@@ -110,8 +124,13 @@ class Cube {
         this.animate();
     }
 
+    /**
+     * @description Funkcja odpowiedzlana za utworzenie kostek Kostki Rubika
+     * 
+     * @param size Rozmiar kostki, która zostanie wygenerowana
+     */
     generateRubikCube(size) {
-        let stardCord = -(size * 0.5 - 0.5);
+        let stardCord = -(size * 0.5 - 0.5); //obliczenie skrajnych współrzędnych kostki, aby jej środek znajdował się idealnie w punkcie 0x0x0
         let maxCoordinate = size + stardCord;
         for (let i = stardCord; i < maxCoordinate; i++) {
             for (let j = stardCord; j < maxCoordinate; j++) {
@@ -125,12 +144,20 @@ class Cube {
         }
     }
 
+    /**
+     * @description Funkcja wymagana do odświeżenia położenia kamery kostki
+     */
     animate() {
         requestAnimationFrame(() => this.animate());
         this.renderer.render(this.scene, this.mainCamera.getCamera());
         this.controls.update();
     }
 
+    /**
+     * @description Funkcja ustawiająca nowe współrzędne kostek Kostki Rubika po wykonaniu obrotu, na podstawie obrotu 3D
+     * 
+     * @param type Oś wookół, której został wykonany obrót
+     */
     refreshPositions(type) {
         let newx;
         let newy;
@@ -185,6 +212,13 @@ class Cube {
         this.rerenderCube();
     }
 
+    /**
+     * @description Funkcja dodająca wszystkie kostki Kostki Rubika, na których wykonywana będzie animacja do grupy
+     * 
+     * @param type Oś wookół, której został wykonany obrót
+     * @param position Pozycja kostki która wywołała animację
+     * @returns Grupa wybranych kostek na których będzie wykonywana animacja
+     */
     addWallToGroup(type, position) {
         let x;
         let y;
@@ -216,6 +250,11 @@ class Cube {
         return group;
     }
 
+    /**
+     * @description Funkcja która wykonuje animację obrotu kostki
+     * 
+     * @param type Typ obrotu osi wraz z określeniem storny obrotu wookół tej osi
+     */
     rotate(type) {
         setTimeout(() => {
             switch (this.rotType) {
@@ -251,6 +290,9 @@ class Cube {
         }, 30);
     }
 
+    /**
+     * @description Funkcja wywoływana do ponownego wygenerowania kostki na scenie z poprawnymi współrzędnymi po wykonaniu obrotu
+     */
     rerenderCube() {
         if (this.count === 9) {
             this.cubes.forEach((cube) => {
@@ -286,6 +328,12 @@ class Cube {
         }
     }
 
+    /**
+     * @description Funkcja używana do wygenerowania losowych współrzędnych kostek na których wykonywany bedzie obród przy mieszaniu Kostki Rubika
+     * 
+     * @param size Wielkość Kostki Rubika
+     * @returns 
+     */
     getRandomSym(size) {
         let random = Math.floor((Math.random() * size) - Math.floor(size / 2));
         if (size % 2 != 0) {
@@ -295,42 +343,58 @@ class Cube {
         }
     }
 
+    /**
+     * @description Funkcja używana do układania Kostki Rubika, która wykonuje wsteczne ruchy które zostały wykonane na Kostce Rubika
+     */
     async solveCube() {
+        let move = {};
         while (this.moves.length > 0) {
-            this.move = this.moves.pop();
-            this.rotType = this.move.rot;
+            move = this.moves.pop();
+            this.rotType = move.rot;
             switch (this.rotType) {
                 case "-x":
-                    this.requestSolveMove("x", "+x", this.move.pos);
+                    this.requestMove("x", "+x", move.pos);
                     break;
                 case "+x":
-                    this.requestSolveMove("x", "-x", this.move.pos);
+                    this.requestMove("x", "-x", move.pos);
                     break;
                 case "-y":
-                    this.requestSolveMove("y", "+y", this.move.pos);
+                    this.requestMove("y", "+y", move.pos);
                     break;
                 case "+y":
-                    this.requestSolveMove("y", "-y", this.move.pos);
+                    this.requestMove("y", "-y", move.pos);
                     break;
                 case "-z":
-                    this.requestSolveMove("z", "+z", this.move.pos);
+                    this.requestMove("z", "+z", move.pos);
                     break;
                 case "+z":
-                    this.requestSolveMove("z", "-z", this.move.pos);
+                    this.requestMove("z", "-z", move.pos);
                     break;
             }
             await delay(this.delayTime);
         }
     }
 
-    requestSolveMove(axis, axisType, wall) {
-        this.group1 = this.addWallToGroup(axis, wall);
+    /**
+     * @description Funkcja, która określa co ma się dziać w trakcie wykonywania obrotu
+     * 
+     * @param axis Oś wookół której wykonywany jest ruch
+     * @param axisType Określenie typu obrotu czy jest wykonywany w kierunku osi czy w przeciwnym
+     * @param requestedPosition Współrzędne punktu który wywołał animację
+     */
+    requestMove(axis, axisType, requestedPosition) {
+        this.group1 = this.addWallToGroup(axis, requestedPosition);
         this.rotType = axisType;
         this.scene.add(this.group1);
         this.count = 0;
         window.requestAnimationFrame(() => this.rotate(axis));
     }
 
+    /**
+     * @description Funkcja która wywołuje miszanie się kostki
+     * 
+     * @param iterations Ilość ruchów do wykonania na kostce
+     */
     async shuffleCube(iterations) {
         let randRot = new String;
         for (let i = 0; i < iterations; i++) {
