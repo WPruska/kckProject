@@ -1,3 +1,6 @@
+/**
+ * @description klasa przechowująca strukturę kostki rubika
+ */
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from "../node_modules/three/build/three.module.js";
 
