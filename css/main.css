@@ -5,8 +5,10 @@ body {
     color: white;
 }
 h1{
-    font-weight: 800;
+    position: absolute;
+    width: 100vw;
     text-align: center;
+    font-weight: 800;
     font-size: 72px;
 }
 button{
