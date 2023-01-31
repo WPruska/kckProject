@@ -65,7 +65,8 @@ button:hover{
     position: absolute;
     text-align: center;
     width: 100vw;
-    height: 5vh;
+    height: 4vh;
+    top: 15vh;
     padding-top: 0.5rem;
     padding-left: 0.5rem;
 }
